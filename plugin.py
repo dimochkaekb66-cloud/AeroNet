@@ -195,60 +195,64 @@ async def simulator_loop() -> None:
     state = {"seen_running": False}
     last_good_sample = 0.0
 
-    while True:
-        if sim is None:
+    try:
+        while True:
+            if sim is None:
+                try:
+                    log.info("Connecting to Microsoft Flight Simulator via SimConnect…")
+                    sim, requests, callsign_request = await asyncio.to_thread(open_simconnect)
+                    state = {"seen_running": False}
+                    last_good_sample = 0.0
+                    log.info("SimConnect link opened; waiting for live aircraft data…")
+                except Exception as exc:
+                    await set_simulator_status(False, f"MSFS unavailable — retrying: {exc}")
+                    await asyncio.sleep(RECONNECT_DELAY_SECONDS)
+                    continue
+
             try:
-                log.info("Connecting to Microsoft Flight Simulator via SimConnect…")
-                sim, requests, callsign_request = await asyncio.to_thread(open_simconnect)
+                telemetry = await asyncio.to_thread(
+                    read_sim_telemetry, sim, requests, callsign_request, state
+                )
+
+                if telemetry is not None:
+                    last_good_sample = time.monotonic()
+                    await set_simulator_status(True, "MSFS connected · live telemetry received")
+                    await broadcast({"type": "aircraft", "payload": telemetry})
+                else:
+                    # SimStop is reported by Python-SimConnect after a flight ends.
+                    if state["seen_running"] and not sim.running:
+                        await set_simulator_status(False, "MSFS flight stopped · aircraft marker removed")
+                        last_good_sample = 0.0
+                    elif simulator_online and last_good_sample:
+                        if time.monotonic() - last_good_sample > STALE_AFTER_SECONDS:
+                            await set_simulator_status(False, "MSFS telemetry lost · aircraft marker removed")
+                            last_good_sample = 0.0
+
+                if sim.quit:
+                    raise SimConnectUnavailable("MSFS process closed")
+
+            except SimConnectUnavailable as exc:
+                log.warning("%s", exc)
+                await set_simulator_status(False, "MSFS disconnected · aircraft marker removed")
+                await asyncio.to_thread(close_simconnect, sim)
+                sim = requests = callsign_request = None
                 state = {"seen_running": False}
                 last_good_sample = 0.0
-                log.info("SimConnect link opened; waiting for live aircraft data…")
-            except Exception as exc:
-                await set_simulator_status(False, f"MSFS unavailable — retrying: {exc}")
                 await asyncio.sleep(RECONNECT_DELAY_SECONDS)
-                continue
 
-        try:
-            telemetry = await asyncio.to_thread(
-                read_sim_telemetry, sim, requests, callsign_request, state
-            )
+            except Exception as exc:
+                log.exception("SimConnect telemetry read failed")
+                await set_simulator_status(False, f"SimConnect error · aircraft marker removed: {exc}")
+                await asyncio.to_thread(close_simconnect, sim)
+                sim = requests = callsign_request = None
+                state = {"seen_running": False}
+                last_good_sample = 0.0
+                await asyncio.sleep(RECONNECT_DELAY_SECONDS)
 
-            if telemetry is not None:
-                last_good_sample = time.monotonic()
-                await set_simulator_status(True, "MSFS connected · live telemetry received")
-                await broadcast({"type": "aircraft", "payload": telemetry})
-            else:
-                # SimStop is reported by Python-SimConnect after a flight ends.
-                if state["seen_running"] and not sim.running:
-                    await set_simulator_status(False, "MSFS flight stopped · aircraft marker removed")
-                    last_good_sample = 0.0
-                elif simulator_online and last_good_sample:
-                    if time.monotonic() - last_good_sample > STALE_AFTER_SECONDS:
-                        await set_simulator_status(False, "MSFS telemetry lost · aircraft marker removed")
-                        last_good_sample = 0.0
-
-            if sim.quit:
-                raise SimConnectUnavailable("MSFS process closed")
-
-        except SimConnectUnavailable as exc:
-            log.warning("%s", exc)
-            await set_simulator_status(False, "MSFS disconnected · aircraft marker removed")
+            await asyncio.sleep(POLL_INTERVAL_SECONDS)
+    finally:
+        if sim is not None:
             await asyncio.to_thread(close_simconnect, sim)
-            sim = requests = callsign_request = None
-            state = {"seen_running": False}
-            last_good_sample = 0.0
-            await asyncio.sleep(RECONNECT_DELAY_SECONDS)
-
-        except Exception as exc:
-            log.exception("SimConnect telemetry read failed")
-            await set_simulator_status(False, f"SimConnect error · aircraft marker removed: {exc}")
-            await asyncio.to_thread(close_simconnect, sim)
-            sim = requests = callsign_request = None
-            state = {"seen_running": False}
-            last_good_sample = 0.0
-            await asyncio.sleep(RECONNECT_DELAY_SECONDS)
-
-        await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
 
 async def main() -> None:

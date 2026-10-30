@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08111f">
+<meta name="description" content="AeroNet — лёгкая карта виртуальной авиационной сети и METAR.">
+<title>AeroNet — карта авиации</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+:root{color-scheme:dark;--bg:#08111f;--panel:#0d1929;--panel2:#122238;--line:#26394f;--text:#eaf2fc;--muted:#91a4bc;--cyan:#57d8e8;--green:#65d6a5;--amber:#f2bd67}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}body{overflow:hidden}.app{height:100%;display:flex;flex-direction:column}.top{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0b1626;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:12px;background:#123b4b;display:grid;place-items:center;color:var(--cyan);font-size:22px;border:1px solid #236174}.brand strong{font-size:17px;letter-spacing:.18em}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:.16em;margin-top:3px}.status{color:var(--amber);font-size:10px;letter-spacing:.1em;border:1px solid #59472d;border-radius:7px;padding:8px 10px}.layout{display:grid;grid-template-columns:340px minmax(0,1fr);flex:1;min-height:0}.side{background:var(--panel);border-right:1px solid var(--line);padding:22px 18px;display:flex;flex-direction:column;gap:16px;overflow:auto}.eyebrow{font-size:9px;color:#7d95b1;font-weight:800;letter-spacing:.18em;margin:0 0 8px}.side h1{font-size:21px;margin:0}.intro{font-size:12px;line-height:1.6;color:var(--muted);margin:9px 0 0}.card{background:linear-gradient(145deg,#112238,#0c1727);border:1px solid var(--line);border-radius:12px;padding:14px}.card h2{font-size:12px;margin:0 0 5px}.hint{font-size:10px;color:var(--muted);line-height:1.5;margin:0 0 12px}.search{display:flex;gap:7px}.search input{flex:1;min-width:0;background:#081321;border:1px solid #30445c;color:var(--text);border-radius:8px;padding:11px;font-size:12px;text-transform:uppercase;outline:none}.search input:focus{border-color:var(--cyan)}button{border:0;background:#176078;color:#e7fbff;border-radius:8px;padding:0 13px;font-weight:700;font-size:11px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.result{margin-top:12px;font-size:11px;line-height:1.55;color:#c2d2e5;overflow-wrap:anywhere}.result .raw{display:block;margin-top:10px;padding:9px;background:#081321;border-radius:7px;color:#a6bed7;font-family:ui-monospace,monospace}.weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.weather-cell{padding:8px;background:#0a1726;border-radius:7px}.weather-cell small{display:block;color:var(--muted);font-size:9px}.weather-cell b{display:block;margin-top:4px;font-size:12px}.empty{padding:14px;border:1px dashed #34475c;border-radius:9px;color:var(--muted);font-size:11px;line-height:1.6}.legend{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}.foot{margin-top:auto;color:#70839c;font-size:10px;line-height:1.6;border-top:1px solid var(--line);padding-top:13px}.mapwrap{position:relative;min-width:0;min-height:0;background:#d3dedc}#map{position:absolute;inset:0;width:100%;height:100%;background:#d3dedc}.maptag{position:absolute;z-index:500;top:17px;left:17px;padding:11px 14px;border-radius:10px;background:#f8fbfbee;color:#1a2b40;box-shadow:0 5px 22px #06111f30;font-size:11px}.maptag b{display:block;margin-bottom:3px}.maptag span{color:#63758b;font-size:10px}.leaflet-container{font-family:inherit}.leaflet-control-attribution{font-size:10px!important}
+@media(max-width:760px){body{overflow:auto}.app{min-height:100%;height:auto}.top{height:58px;flex-basis:58px;padding:0 14px}.layout{display:flex;flex-direction:column-reverse;min-height:calc(100vh - 58px)}.mapwrap{height:52vh;min-height:330px}.side{border-right:0;border-top:1px solid var(--line);overflow:visible;padding:17px 14px}.status{font-size:8px;padding:7px}.brand strong{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><div class="brand"><div class="logo">✈</div><div><strong>AERONET</strong><small>VIRTUAL AVIATION NETWORK</small></div></div><div class="status">ОЖИДАНИЕ ПОДКЛЮЧЕНИЯ</div></header>
+<div class="layout">
+<aside class="side">
+<section><p class="eyebrow">GLOBAL FLIGHT MAP</p><h1>Карта AeroNet</h1><p class="intro">Карта готова к подключению реального трафика. Неактивные и вымышленные самолёты и диспетчеры не отображаются.</p></section>
+<section class="card"><h2>Погода METAR</h2><p class="hint">Введи четырёхзначный ICAO-код аэропорта, например ESSA, EGLL или KJFK.</p><form id="metar-form" class="search"><input id="icao" maxlength="4" minlength="4" pattern="[A-Za-z0-9]{4}" value="ESSA" placeholder="ICAO" autocomplete="off" required><button id="metar-btn" type="submit">Получить</button></form><div id="metar-result" class="result" aria-live="polite">Нажми «Получить», чтобы запросить актуальную сводку.</div></section>
+<section><p class="eyebrow">LIVE OBJECTS</p><div class="empty">Сейчас нет подключённых самолётов или диспетчеров. Объекты появятся здесь после интеграции JoinFS и сервера AeroNet.</div></section>
+<div class="legend"><span class="dot"></span> Подключение ожидается</div>
+<footer class="foot">AeroNet — независимый проект для авиасимулятора. METAR предоставляется внешним источником и предназначен для симуляции, а не для реального планирования полётов.</footer>
+</aside>
+<main class="mapwrap"><div id="map" role="application" aria-label="Интерактивная карта мира"></div><div class="maptag"><b>КАРТА МИРА</b><span>Реальный трафик появится после подключения</span></div></main>
+</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function(){
+  const mapNode=document.getElementById('map');
+  const result=document.getElementById('metar-result');
+  const form=document.getElementById('metar-form');
+  const input=document.getElementById('icao');
+  const button=document.getElementById('metar-btn');
+  if(!window.L){mapNode.innerHTML='<div style="padding:24px;color:#17283e">Не удалось загрузить карту. Проверь подключение к интернету и обнови страницу.</div>';return;}
+  const map=L.map('map',{zoomControl:true,worldCopyJump:true,minZoom:2}).setView([18,0],2);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
+  }).addTo(map);
+  setTimeout(function(){map.invalidateSize();},150);
+  window.addEventListener('resize',function(){map.invalidateSize();});
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function pick(obj,keys){for(let i=0;i<keys.length;i++){if(obj[keys[i]]!==undefined&&obj[keys[i]]!==null&&obj[keys[i]]!=='')return obj[keys[i]];}return null;}
+  function cell(label,value){return '<div class="weather-cell"><small>'+esc(label)+'</small><b>'+esc(value==null?'—':value)+'</b></div>';}
+  function render(report,icao){
+    const raw=pick(report,['rawText','raw_text','raw','metar','rawOb']);
+    const wind=pick(report,['wind','windText','wind_text']);
+    const visibility=pick(report,['visibility','visibilityText','visibility_text']);
+    const temp=pick(report,['temperature','temp','temperatureC','temperature_c']);
+    const dew=pick(report,['dewpoint','dewPoint','dewpointC','dewpoint_c']);
+    const qnh=pick(report,['altimeter','qnh','pressure','pressureHpa']);
+    const clouds=pick(report,['clouds','cloudLayers','cloud_layers']);
+    result.innerHTML='<b style="color:#65d6a5">'+esc(icao)+' · METAR получен</b><div class="weather-grid">'+cell('Ветер',typeof wind==='object'?JSON.stringify(wind):wind)+cell('Видимость',typeof visibility==='object'?JSON.stringify(visibility):visibility)+cell('Температура',temp)+cell('Точка росы',dew)+cell('QNH / давление',qnh)+cell('Облачность',typeof clouds==='object'?JSON.stringify(clouds):clouds)+'</div>'+(raw?'<code class="raw">'+esc(raw)+'</code>':'')+'<div style="margin-top:8px;color:#91a4bc;font-size:10px">Источник: metars.eu · данные авиационных метеонаблюдений. Проверь исходную строку METAR.</div>';
+  }
+  async function loadMetar(code){
+    button.disabled=true;button.textContent='Загрузка…';result.textContent='Запрашиваем METAR для '+code+'…';
+    try{
+      const response=await fetch('https://metars.eu/api/metars/'+encodeURIComponent(code)+'/decoded',{headers:{'Accept':'application/json'}});
+      if(!response.ok)throw new Error(response.status===404?'Для этого ICAO-кода нет доступного METAR.':'Сервис погоды ответил ошибкой HTTP '+response.status+'.');
+      const data=await response.json();
+      const report=Array.isArray(data)?data[0]:data;
+      if(!report)throw new Error('Сервис не вернул сводку для этого аэропорта.');
+      const raw=pick(report,['rawText','raw_text','raw','metar','rawOb']);
+      if(!raw)throw new Error('В ответе сервиса нет исходной строки METAR. Попробуй позже.');
+      render(report,code);
+    }catch(error){
+      result.innerHTML='<b style="color:#f2bd67">METAR временно недоступен</b><br>'+esc(error.message||'Ошибка получения данных.')+'<br><a style="color:#57d8e8" href="https://metars.eu/'+encodeURIComponent(code)+'" target="_blank" rel="noopener noreferrer">Открыть metars.eu для '+esc(code)+'</a>';
+    }finally{button.disabled=false;button.textContent='Получить';}
+  }
+  form.addEventListener('submit',function(event){event.preventDefault();const code=input.value.trim().toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code)){result.textContent='Введи корректный четырёхзначный ICAO-код.';return;}input.value=code;loadMetar(code);});
+})();
+</script>
+</body>
+</html>

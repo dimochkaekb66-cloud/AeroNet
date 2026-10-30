@@ -29,7 +29,7 @@
 </section>
 <div class="empty" id="data-note">Трафик самолётов и активные диспетчеры появятся только после подключения реальных источников AeroNet / JoinFS. Сейчас отображаются аэропорты, а не самолёты.</div>
 <div class="legend"><span class="legend-mark"></span> Аэропорт · кластеры объединяют близкие точки</div>
-<footer class="foot">Аэропорты: OurAirports, открытые данные общественного достояния; вертолётные площадки и водные аэродромы исключены. Подложка: © OpenStreetMap contributors. METAR: metars.eu / NOAA Aviation Weather Center. Не использовать для реальных полётов.</footer>
+<footer class="foot">Аэропорты: OurAirports, открытые данные общественного достояния; вертолётные площадки и водные аэродромы исключены. Подложка: Esri World Street Map (источники Esri и партнёры). METAR: metars.eu / NOAA Aviation Weather Center. Не использовать для реальных полётов.</footer>
 </aside>
 <main class="mapwrap"><div id="map" role="application" aria-label="Интерактивная карта всех аэропортов мира"></div><div class="maptag"><b>АЭРОПОРТЫ МИРА</b><span id="map-status">Подключаем карту…</span></div></main>
 </div>
@@ -51,10 +51,10 @@
   const mapStatus=document.getElementById('map-status');
   if(!window.L){mapNode.innerHTML='<div style="padding:24px;color:#17283e">Не удалось загрузить библиотеку карты. Проверь интернет и обнови страницу.</div>';topStatus.textContent='КАРТА НЕДОСТУПНА';return;}
   const map=L.map('map',{zoomControl:true,worldCopyJump:true,minZoom:2}).setView([22,5],2);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{
     maxZoom:19,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
-  }).addTo(map).on('tileerror',function(){mapStatus.textContent='Подложка временно недоступна';});
+    attribution:'Sources: Esri, DeLorme, HERE, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), MapmyIndia, TomTom | &copy; Esri'
+  }).addTo(map).on('tileerror',function(){mapStatus.textContent='Подложка Esri временно недоступна';});
   setTimeout(function(){map.invalidateSize();},200);
   window.addEventListener('resize',function(){map.invalidateSize();});
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -116,7 +116,7 @@
     icons[type]=L.divIcon({className:'',html:'<span class="airport-marker '+type+'"></span>',iconSize:[14,14],iconAnchor:[7,7]});
   });
   const clusterGroup=typeof L.markerClusterGroup==='function'?L.markerClusterGroup({
-    chunkedLoading:true,chunkInterval:120,chunkDelay:30,maxClusterRadius:42,showCoverageOnHover:false,spiderfyOnMaxZoom:true,
+    chunkedLoading:false,maxClusterRadius:42,showCoverageOnHover:false,spiderfyOnMaxZoom:true,
     chunkProgress:function(processed,total){mapStatus.textContent='Добавляем точки аэропортов: '+Math.round(processed/total*100)+'%';if(processed===total)mapStatus.textContent=allAirports.length.toLocaleString('ru-RU')+' аэропортов · готово';},
     iconCreateFunction:function(cluster){const count=cluster.getChildCount();const size=count<100?'small':count<1000?'medium':'large';return L.divIcon({html:'<div class="airport-cluster">'+count.toLocaleString('en-US')+'</div>',className:'marker-cluster marker-cluster-'+size,iconSize:L.point(46,46)});}
   }):null;
@@ -165,6 +165,33 @@
     renderAirportList(found,q);
   }
   airportFilter.addEventListener('input',onFilter);
+  async function readCsvLines(response,onLine){
+    if(response.body&&typeof response.body.getReader==='function'){
+      const reader=response.body.getReader();
+      const decoder=new TextDecoder('utf-8');
+      let buffer='';
+      while(true){
+        const part=await reader.read();
+        buffer+=decoder.decode(part.value||new Uint8Array(),{stream:!part.done});
+        let newline;
+        while((newline=buffer.indexOf('\n'))!==-1){
+          onLine(buffer.slice(0,newline).replace(/\r$/,''));
+          buffer=buffer.slice(newline+1);
+        }
+        if(part.done)break;
+      }
+      if(buffer)onLine(buffer.replace(/\r$/,''));
+      return;
+    }
+    const csv=await response.text();
+    let start=0;
+    while(start<csv.length){
+      let end=csv.indexOf('\n',start);
+      if(end<0)end=csv.length;
+      onLine(csv.slice(start,end).replace(/\r$/,''));
+      start=end+1;
+    }
+  }
   async function loadAirportDatabase(){
     topStatus.textContent='ЗАГРУЗКА АЭРОПОРТОВ';mapStatus.textContent='Загружаем всемирную базу аэропортов…';
     airportCount.textContent='Загрузка базы…';
@@ -172,26 +199,44 @@
       'https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv',
       'https://davidmegginson.github.io/ourairports-data/airports.csv'
     ];
-    let csv=null,lastError=null;
-    for(let i=0;i<urls.length&&!csv;i++){
-      try{const response=await fetch(urls[i],{cache:'force-cache'});if(!response.ok)throw new Error('HTTP '+response.status);csv=await response.text();if(csv.length<1000||csv.indexOf('latitude_deg')<0)throw new Error('Не удалось прочитать CSV базы аэропортов.');}
-      catch(error){lastError=error;csv=null;}
+    let response=null,lastError=null;
+    for(let i=0;i<urls.length&&!response;i++){
+      try{
+        const candidate=await fetch(urls[i],{cache:'force-cache'});
+        if(!candidate.ok)throw new Error('HTTP '+candidate.status);
+        response=candidate;
+      }catch(error){lastError=error;}
     }
-    if(!csv)throw lastError||new Error('База аэропортов недоступна.');
-    const lines=csv.split(/\r?\n/);
-    const headers=parseCsvLine(lines[0]).map(function(x){return x.trim();});
-    const idx={};headers.forEach(function(h,i){idx[h]=i;});
-    const get=function(row,key){return row[idx[key]]==null?'':row[idx[key]].trim();};
-    const airports=[];const markers=[];
+    if(!response)throw lastError||new Error('База аэропортов недоступна.');
+    let headers=null;
+    let idx={};
+    let airports=[];
+    let markerBatch=[];
     const allowedTypes=new Set(['large_airport','medium_airport','small_airport']);
-    for(let i=1;i<lines.length;i++){
-      const line=lines[i];if(!line)continue;
+    const get=function(row,key){return row[idx[key]]==null?'':row[idx[key]].trim();};
+    let lineNumber=0;
+    function flushMarkerBatch(){
+      if(!markerBatch.length)return;
+      clusterGroup.addLayers(markerBatch);
+      markerBatch=[];
+    }
+    function processCsvLine(line){
+      if(!line)return;
+      if(headers===null){
+        headers=parseCsvLine(line).map(function(x){return x.trim();});
+        headers.forEach(function(h,i){idx[h]=i;});
+        if(idx.latitude_deg===undefined||idx.longitude_deg===undefined||idx.type===undefined)throw new Error('Формат базы аэропортов изменился.');
+        return;
+      }
+      lineNumber++;
       const row=parseCsvLine(line);
-      const latRaw=get(row,'latitude_deg');const lonRaw=get(row,'longitude_deg');if(!latRaw||!lonRaw)continue;
+      const latRaw=get(row,'latitude_deg');const lonRaw=get(row,'longitude_deg');
+      if(!latRaw||!lonRaw)return;
       const lat=Number(latRaw);const lon=Number(lonRaw);
-      const type=get(row,'type');if(!allowedTypes.has(type)||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;
+      const type=get(row,'type');
+      if(!allowedTypes.has(type)||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
       const airport={
-        id:get(row,'id')||get(row,'ident')||String(i),
+        id:get(row,'id')||get(row,'ident')||String(lineNumber),
         ident:get(row,'ident'),icao:get(row,'icao_code').toUpperCase(),iata:get(row,'iata_code').toUpperCase(),
         type:type,name:get(row,'name')||get(row,'ident'),city:get(row,'municipality'),
         country:get(row,'iso_country'),lat:lat,lon:lon,scheduled:get(row,'scheduled_service')==='yes'
@@ -199,22 +244,20 @@
       airports.push(airport);
       const marker=L.marker([lat,lon],{icon:icons[type]||icons.small_airport,title:(airport.icao||airport.ident)+' — '+airport.name,airport:airport,keyboard:false});
       marker.on('click',markerClick);
-      markers.push(marker);
+      markerBatch.push(marker);
+      if(markerBatch.length>=800)flushMarkerBatch();
+      if(airports.length&&airports.length%5000===0){
+        airportCount.textContent=airports.length.toLocaleString('ru-RU')+' найдено…';
+        mapStatus.textContent='Обрабатываем базу аэропортов: '+airports.length.toLocaleString('ru-RU');
+      }
     }
+    await readCsvLines(response,processCsvLine);
+    if(headers===null)throw new Error('База аэропортов пуста или не распознана.');
+    flushMarkerBatch();
     allAirports=airports;
     airportCount.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов';
-    mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов';
+    mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов · готово';
     topStatus.textContent='АЭРОПОРТЫ ЗАГРУЖЕНЫ';
-    const batchSize=600;
-    let offset=0;
-    function addMarkerBatch(){
-      const batch=markers.slice(offset,offset+batchSize);
-      if(batch.length)clusterGroup.addLayers(batch);
-      offset+=batch.length;
-      if(offset<markers.length){mapStatus.textContent='Загрузка точек: '+Math.round(offset/markers.length*100)+'%';setTimeout(addMarkerBatch,0);}
-      else{mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов · готово';}
-    }
-    addMarkerBatch();
     onFilter();
   }
   form.addEventListener('submit',function(event){

@@ -1,0 +1,2 @@
+SimConnect
+websockets>=14,<18

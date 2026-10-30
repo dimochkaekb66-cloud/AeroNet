@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0b1220">
 <title>AeroNet — Global Airport Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <style>
 :root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--line:#26364d;--text:#edf4ff;--muted:#93a7c2;--blue:#52b7ff}
 *{box-sizing:border-box}html,body{height:100%;margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}body{overflow:hidden}
@@ -30,16 +31,18 @@ footer{padding:10px 15px;border-top:1px solid var(--line);font-size:10px;color:v
 <div class="stats"><div class="stat"><b id="total">—</b><small>Airports loaded</small></div><div class="stat"><b id="visible">0</b><small>On map</small></div></div>
 <div class="section"><span>Airports in view</span><span id="zoom">ZOOM —</span></div>
 <div id="results"><div class="empty">Loading worldwide airport data…</div></div>
-<footer>Tiles: CARTO Positron · Airport data: OurAirports · METAR: VATSIM<br>No simulated aircraft or ATC traffic.</footer>
+<footer>Tiles: OpenFreeMap Positron · Airport data: OurAirports · METAR: VATSIM<br>No simulated aircraft or ATC traffic.</footer>
 </aside>
 <main class="mapwrap"><div id="map"></div><div class="status" id="status">Loading map…</div></main>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
 <script>
 (function(){
 "use strict";
 const map=L.map("map",{center:[25,10],zoom:2,minZoom:2,maxZoom:19,preferCanvas:true,worldCopyJump:true});
-L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'}).addTo(map);
+L.maplibreGL({style:"https://tiles.openfreemap.org/styles/positron"}).addTo(map);
 const urls=["https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv","https://davidmegginson.github.io/ourairports-data/airports.csv"];
 const cellSize=5,index=new Map(),all=[],markers=new Map(),layer=L.layerGroup().addTo(map),renderer=L.canvas({padding:.5}),cache=new Map();
 const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<SimBase.Document Type="SimConnect" version="1,0">
+  <Descr>SimConnect</Descr>
+  <Filename>SimConnect.xml</Filename>
+  <Disabled>False</Disabled>
+
+  <!-- Merge this Launch.Addon block into your existing exe.xml.
+       Replace the path below with your actual Community folder path. -->
+  <Launch.Addon>
+    <Name>AeroNet MSFS Telemetry Bridge</Name>
+    <Disabled>False</Disabled>
+    <Path>C:\Windows\System32\cmd.exe</Path>
+    <CommandLine>/c ""C:\YOUR\MSFS\Community\AeroNet-MSFS-Bridge\start.bat""</CommandLine>
+    <NewConsole>True</NewConsole>
+  </Launch.Addon>
+</SimBase.Document>

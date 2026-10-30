@@ -68,8 +68,8 @@
     if(!raw)throw new Error('В ответе сервиса нет исходной строки METAR.');
     const temp=report.temperature&&typeof report.temperature==='object'?report.temperature:{};
     const numeric=function(){for(let i=0;i<arguments.length;i++){const v=arguments[i];if(v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v)))return Number(v);}return null;};
-    const rawTemp=raw.match(/\\s(M?\\d{2})\\/(M?\\d{2})\\s/);
-    const rawQnh=raw.match(/\\s(Q|A)(\\d{4})\\b/);
+    const rawTemp=raw.match(/\s(M?\d{2})\/(M?\d{2})\s/);
+    const rawQnh=raw.match(/\s(Q|A)(\d{4})\b/);
     const parseSigned=function(v){return v==null?null:(String(v).charAt(0)==='M'?-Number(String(v).slice(1)):Number(v));};
     const tempValue=numeric(temp.temp,temp.value,report.temperatureC,report.temperature_c,report.temp)??(rawTemp?parseSigned(rawTemp[1]):null);
     const dewValue=numeric(temp.dewPoint,temp.dewpoint,temp.dew_point,report.dewpoint,report.dewPoint,report.dew_point)??(rawTemp?parseSigned(rawTemp[2]):null);

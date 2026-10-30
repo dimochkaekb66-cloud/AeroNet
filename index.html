@@ -111,6 +111,7 @@
   });
   const clusterGroup=typeof L.markerClusterGroup==='function'?L.markerClusterGroup({
     chunkedLoading:true,chunkInterval:120,chunkDelay:30,maxClusterRadius:42,showCoverageOnHover:false,spiderfyOnMaxZoom:true,
+    chunkProgress:function(processed,total){mapStatus.textContent='Добавляем точки аэропортов: '+Math.round(processed/total*100)+'%';if(processed===total)mapStatus.textContent=allAirports.length.toLocaleString('ru-RU')+' аэропортов и аэродромов · готово';},
     iconCreateFunction:function(cluster){const count=cluster.getChildCount();const size=count<100?'small':count<1000?'medium':'large';return L.divIcon({html:'<div class="airport-cluster">'+count.toLocaleString('en-US')+'</div>',className:'marker-cluster marker-cluster-'+size,iconSize:L.point(46,46)});}
   }):null;
   if(!clusterGroup){result.textContent='Не удалось загрузить модуль группировки точек. Обнови страницу или попробуй позже.';topStatus.textContent='ОШИБКА КАРТЫ';return;}
@@ -141,7 +142,6 @@
     });
     if(items.length>shown.length){const note=document.createElement('div');note.className='count';note.textContent='Показаны первые '+shown.length+' из '+items.length+'. Уточни поиск.';airportList.appendChild(note);}
   }
-  function rank(airport){return (airport.type==='large_airport'?0:airport.type==='medium_airport'?1:airport.type==='small_airport'?2:3)+(airport.scheduled?'0':'1')==='';}
   function onFilter(){
     const q=airportFilter.value.trim().toLowerCase();
     if(!q){
@@ -192,15 +192,7 @@
     airportCount.textContent=airports.length.toLocaleString('ru-RU')+' точек';
     mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов и аэродромов';
     topStatus.textContent='АЭРОПОРТЫ ЗАГРУЖЕНЫ';
-    const chunkSize=2500;
-    let added=0;
-    function addChunk(){
-      const batch=markers.slice(added,added+chunkSize);if(batch.length)clusterGroup.addLayers(batch);
-      added+=batch.length;
-      if(added<markers.length){mapStatus.textContent='Добавляем точки: '+Math.round(added/markers.length*100)+'%';requestAnimationFrame(addChunk);}
-      else{mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов и аэродромов · готово';}
-    }
-    requestAnimationFrame(addChunk);
+    clusterGroup.addLayers(markers);
     onFilter();
   }
   form.addEventListener('submit',function(event){

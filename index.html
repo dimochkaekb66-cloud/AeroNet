@@ -20,19 +20,69 @@ footer{padding:10px 15px;border-top:1px solid var(--line);font-size:10px;color:v
 .mapwrap{min-width:0;min-height:0;position:relative}#map{height:100%;width:100%;background:#e1e6e8}.status{position:absolute;z-index:450;bottom:13px;left:13px;background:#101b2bef;border:1px solid #34465f;border-radius:8px;padding:9px 12px;font-size:11px;color:#c3d2e5;pointer-events:none}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#111c2d;color:var(--text)}.leaflet-popup-content-wrapper{border:1px solid #34465f;border-radius:10px}.leaflet-popup-content{margin:13px 15px;min-width:220px}.leaflet-popup-close-button{color:#a9bdd6!important}
 .pcode{font-size:15px;font-weight:900;color:#70c7ff}.pname{font-size:12px;font-weight:700;margin-top:3px}.ploc{font-size:10px;color:var(--muted);margin-top:3px}.label{font-size:9px;color:#91a9c6;text-transform:uppercase;letter-spacing:1px;margin:10px 0 5px}.metar{font:11px/1.55 ui-monospace,monospace;overflow-wrap:anywhere;color:#dbe8f7}.state{font-size:11px;color:var(--muted);line-height:1.5}.error{color:#ff9ba2}.refresh{margin-top:9px;padding:6px 9px;background:#1a2d45;border:1px solid #3a5878;border-radius:6px;color:#bfe5ff;cursor:pointer}
+
+.atc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.header-left{min-width:0}
+.header-tools{display:flex;align-items:center;gap:9px}
+.state-indicator{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:#d7dee8;border:1px solid #fff;box-shadow:0 0 0 2px #ffffff16}
+.state-indicator.on{background:#32d583;border-color:#78f0b0;box-shadow:0 0 10px #32d583aa}
+.mode-button,.connect-button{border:1px solid #3a5878;background:#1a2d45;color:#c9eaff;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.mode-button:hover,.connect-button:hover{background:#24415f}
+.sim-link{padding:0 15px 11px}
+.sim-caption{font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:800;margin:0 0 6px}
+.sim-controls{display:flex;gap:6px}
+.sim-controls input{min-width:0;flex:1;font-size:11px;padding:8px}
+.sim-controls button{white-space:nowrap}
+.sim-status{font-size:10px;color:var(--muted);margin-top:5px;min-height:14px}
+.modal-backdrop{position:fixed;inset:0;z-index:3000;background:#030814c9;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-backdrop[hidden]{display:none}
+.modal{width:min(100%,360px);background:#111c2d;border:1px solid #3b506c;border-radius:14px;padding:22px;box-shadow:0 18px 70px #0009}
+.modal h2{font-size:18px;margin:0 0 7px}
+.modal p{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 16px}
+.modal input{margin-bottom:9px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.modal-actions button{padding:9px 13px}
+.cancel-button{border:1px solid var(--line);background:#172438;color:#cbd8e8;border-radius:7px;cursor:pointer}
+.password-error{min-height:16px;color:#ff929b;font-size:11px}
+.aircraft-div-icon{background:transparent;border:0}
+.aircraft-glyph{width:32px;height:32px;display:grid;place-items:center;color:#075fb2;font-size:27px;line-height:1;text-shadow:0 1px 2px #fff,0 0 5px #fff;transform-origin:50% 50%;filter:drop-shadow(0 1px 2px #fff)}
+
 @media(max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:44% 56%}header{padding:9px 13px}h1{font-size:16px}.searchbox{padding:8px 12px 5px}input{padding:8px}.stats{padding:3px 12px 8px}.stat{padding:6px}.stat b{font-size:13px}#results{display:grid;grid-template-columns:1fr 1fr;align-content:start}.item{padding:8px 10px}footer{display:none}.mapwrap{grid-row:2}.side{border-right:0;border-bottom:1px solid var(--line)}}
 </style>
 </head>
 <body>
 <div class="app">
 <aside class="side">
-<header><h1>✈ AeroNet</h1><div class="sub">GLOBAL AIRPORT MAP · LIVE METAR</div></header>
+<header>
+<div class="atc-row">
+ <div class="header-left"><h1>✈ AeroNet</h1><div class="sub">GLOBAL AIRPORT MAP · LIVE METAR</div></div>
+ <div class="header-tools"><span id="state-dot" class="state-indicator" title="System status: standby" aria-label="System status"></span><button id="atc-toggle" class="mode-button" type="button">ATC Mode</button></div>
+</div>
+</header>
 <div class="searchbox"><input id="search" type="search" placeholder="Search ICAO, IATA, airport or city…" autocomplete="off"></div>
+<div class="sim-link">
+ <div class="sim-caption">MSFS 2020 TELEMETRY LINK</div>
+ <div class="sim-controls"><input id="ws-url" type="text" value="ws://127.0.0.1:8787" aria-label="WebSocket address"><button id="sim-connect" class="connect-button" type="button">Connect</button></div>
+ <div id="sim-status" class="sim-status">Disconnected · waiting for simulator plugin</div>
+</div>
 <div class="stats"><div class="stat"><b id="total">—</b><small>Airports loaded</small></div><div class="stat"><b id="visible">0</b><small>On map</small></div></div>
 <div class="section"><span>Airports in view</span><span id="zoom">ZOOM —</span></div>
 <div id="results"><div class="empty">Loading worldwide airport data…</div></div>
 <footer>Tiles: OpenFreeMap Positron · Airport data: OurAirports · METAR: VATSIM<br>No simulated aircraft or ATC traffic.</footer>
 </aside>
+
+<div id="password-modal" class="modal-backdrop" hidden>
+ <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <h2 id="modal-title">Controller access</h2>
+  <p>Enter the password to enable the local ATC interface.</p>
+  <form id="password-form">
+   <input id="atc-password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="ATC password" aria-label="ATC password">
+   <div id="password-error" class="password-error" aria-live="polite"></div>
+   <div class="modal-actions"><button id="cancel-password" class="cancel-button" type="button">Cancel</button><button class="mode-button" type="submit">Unlock</button></div>
+  </form>
+ </section>
+</div>
+
 <main class="mapwrap"><div id="map"></div><div class="status" id="status">Loading map…</div></main>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -47,6 +97,127 @@ const urls=["https://raw.githubusercontent.com/davidmegginson/ourairports-data/m
 const cellSize=5,index=new Map(),all=[],markers=new Map(),layer=L.layerGroup().addTo(map),renderer=L.canvas({padding:.5}),cache=new Map();
 const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let last=[],selected="",timer=0;
+let atcMode=false,simSocket=null,simConnected=false,aircraftMarker=null,aircraftLast=null;
+function updateSystemIndicator(){
+ const dot=$("state-dot"),button=$("atc-toggle");
+ const active=atcMode||simConnected;
+ dot.classList.toggle("on",active);
+ dot.title=atcMode?"ATC mode active":simConnected?"Simulator connected":"System standby";
+ button.textContent=atcMode?"Exit ATC Mode":"ATC Mode";
+}
+function showPasswordModal(){
+ $("password-error").textContent="";
+ $("atc-password").value="";
+ $("password-modal").hidden=false;
+ setTimeout(()=>$("atc-password").focus(),0);
+}
+function hidePasswordModal(){$("password-modal").hidden=true}
+$("atc-toggle").addEventListener("click",()=>{
+ if(atcMode){atcMode=false;updateSystemIndicator();return}
+ showPasswordModal();
+});
+$("cancel-password").addEventListener("click",hidePasswordModal);
+$("password-modal").addEventListener("click",e=>{if(e.target.id==="password-modal")hidePasswordModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("password-modal").hidden)hidePasswordModal()});
+$("password-form").addEventListener("submit",e=>{
+ e.preventDefault();
+ if($("atc-password").value==="1234"){
+  atcMode=true;hidePasswordModal();updateSystemIndicator();
+ }else{
+  $("password-error").textContent="Incorrect password. Access denied.";
+  $("atc-password").select();
+ }
+});
+function setSimStatus(message){$("sim-status").textContent=message}
+function removeAircraft(){
+ if(aircraftMarker){map.removeLayer(aircraftMarker);aircraftMarker=null}
+ aircraftLast=null;
+}
+function numeric(value){
+ if(value===undefined||value===null||value==="")return null;
+ const result=Number(value);return Number.isFinite(result)?result:null;
+}
+function updateAircraft(data){
+ if(!data||typeof data!=="object")return false;
+ const source=data.aircraft&&typeof data.aircraft==="object"?data.aircraft:data;
+ const lat=numeric(source.latitude??source.lat??source.latitude_deg);
+ const lon=numeric(source.longitude??source.lon??source.lng??source.longitude_deg);
+ if(lat===null||lon===null||lat < -90||lat > 90||lon < -180||lon > 180)return false;
+ const altitude=numeric(source.altitude_ft??source.altitude??source.alt_ft??source.alt);
+ const heading=numeric(source.heading??source.heading_deg??source.hdg??source.track);
+ const callsign=String(source.callsign??source.callSign??source.flight??"USER").trim()||"USER";
+ const aircraft={
+  latitude:lat,longitude:lon,altitude:altitude,heading:heading===null?0:((heading%360)+360)%360,
+  callsign:callsign,receivedAt:new Date()
+ };
+ aircraftLast=aircraft;
+ const icon=L.divIcon({
+  className:"aircraft-div-icon",iconSize:[32,32],iconAnchor:[16,16],
+  html:'<div class="aircraft-glyph" style="transform:rotate('+aircraft.heading+'deg)">✈</div>'
+ });
+ if(!aircraftMarker){
+  aircraftMarker=L.marker([lat,lon],{icon:icon,zIndexOffset:2000,keyboard:false}).addTo(map);
+  aircraftMarker.bindPopup("");
+ }else{
+  aircraftMarker.setLatLng([lat,lon]);
+  aircraftMarker.setIcon(icon);
+ }
+ const altText=altitude===null?"Altitude —":("Altitude "+Math.round(altitude).toLocaleString()+" ft");
+ const popup='<div class="pcode">'+esc(callsign)+'</div><div class="pname">Your MSFS aircraft</div><div class="ploc">'+lat.toFixed(5)+", "+lon.toFixed(5)+'</div><div class="label">LIVE SIMULATOR TELEMETRY</div><div class="state">'+altText+'<br>Heading '+Math.round(aircraft.heading)+'°<br>Updated '+aircraft.receivedAt.toLocaleTimeString()+'</div>';
+ aircraftMarker.setPopupContent(popup);
+ setSimStatus("Telemetry received · "+callsign+" · "+aircraft.receivedAt.toLocaleTimeString());
+ return true;
+}
+window.AeroNet=window.AeroNet||{};
+window.AeroNet.updateAircraft=updateAircraft;
+window.addEventListener("message",event=>{
+ const message=event.data;
+ if(message&&message.source==="aeronet-msfs"&&message.type==="aircraft")updateAircraft(message.payload||message);
+});
+function disconnectSimulator(){
+ const socket=simSocket;
+ simSocket=null;simConnected=false;
+ if(socket){socket.onclose=null;socket.onerror=null;socket.onmessage=null;try{socket.close()}catch(error){}}
+ removeAircraft();
+ $("sim-connect").textContent="Connect";
+ setSimStatus("Disconnected · waiting for simulator plugin");
+ updateSystemIndicator();
+}
+$("sim-connect").addEventListener("click",()=>{
+ if(simSocket&&simSocket.readyState===WebSocket.OPEN){disconnectSimulator();return}
+ if(simSocket&&simSocket.readyState===WebSocket.CONNECTING){setSimStatus("Connection is already in progress…");return}
+ const endpoint=$("ws-url").value.trim();
+ if(!/^wss?:\/\//i.test(endpoint)){setSimStatus("Enter a valid ws:// or wss:// address");return}
+ let socket;
+ try{socket=new WebSocket(endpoint)}catch(error){setSimStatus("Could not create WebSocket: "+error.message);return}
+ simSocket=socket;
+ setSimStatus("Connecting to "+endpoint+"…");
+ $("sim-connect").textContent="Disconnect";
+ socket.onopen=()=>{
+  if(simSocket!==socket)return;
+  simConnected=true;setSimStatus("Connected · waiting for aircraft telemetry");
+  updateSystemIndicator();
+ };
+ socket.onmessage=event=>{
+  if(simSocket!==socket)return;
+  try{
+   const payload=JSON.parse(event.data);
+   const data=payload&&payload.type==="aircraft"?(payload.payload||payload):payload;
+   if(!updateAircraft(data))setSimStatus("Connected · received message without valid lat/lon");
+  }catch(error){setSimStatus("Connected · ignored non-JSON telemetry message")}
+ };
+ socket.onerror=()=>{
+  if(simSocket===socket)setSimStatus("WebSocket error · check that the simulator bridge is running");
+ };
+ socket.onclose=()=>{
+  if(simSocket!==socket)return;
+  simSocket=null;simConnected=false;removeAircraft();
+  $("sim-connect").textContent="Connect";
+  setSimStatus("Disconnected · simulator link closed");
+  updateSystemIndicator();
+ };
+});
+updateSystemIndicator();
 function parseCSV(s){let rows=[],row=[],v="",q=false;for(let i=0;i<s.length;i++){let c=s[i];if(q){if(c==='"'&&s[i+1]==='"'){v+='"';i++}else if(c==='"')q=false;else v+=c}else if(c==='"')q=true;else if(c===","){row.push(v);v=""}else if(c==="\n"){row.push(v);rows.push(row);row=[];v=""}else if(c!=="\r")v+=c}if(v||row.length){row.push(v);rows.push(row)}let h=rows.shift()||[];return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||""])))}
 function add(a){let k=Math.floor(a.lat/cellSize)+":"+Math.floor(a.lon/cellSize);if(!index.has(k))index.set(k,[]);index.get(k).push(a)}
 async function load(){let err;for(const url of urls){try{let res=await fetch(url);if(!res.ok)throw Error("HTTP "+res.status);let rows=parseCSV(await res.text());for(const r of rows){let type=r.type,lat=Number(r.latitude_deg),lon=Number(r.longitude_deg),icao=(r.ident||"").toUpperCase();if(!["large_airport","medium_airport","small_airport","heliport","seaplane_base"].includes(type)||!icao||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;let a={id:icao+"|"+lat+"|"+lon,icao,name:r.name||"Unnamed airport",type,lat,lon,city:r.municipality||"",country:r.iso_country||"",iata:r.iata_code||""};all.push(a);add(a)}if(!all.length)throw Error("Airport list is empty");all.sort((a,b)=>a.name.localeCompare(b.name));$("total").textContent=all.length.toLocaleString();draw();return}catch(e){err=e}}$("results").innerHTML='<div class="empty">Could not load airport data. Check your connection and reload.<br>'+esc(err?.message||"")+'</div>';$("status").textContent="Airport data unavailable"}

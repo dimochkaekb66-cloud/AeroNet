@@ -20,7 +20,7 @@
 <header class="top"><div class="brand"><div class="logo">✈</div><div><strong>AERONET</strong><small>VIRTUAL AVIATION NETWORK</small></div></div><div class="status" id="top-status">ЗАГРУЗКА КАРТЫ</div></header>
 <div class="layout">
 <aside class="side">
-<section><p class="eyebrow">GLOBAL AIRPORT MAP</p><h1>Все аэропорты мира</h1><p class="intro">На карте отмечены аэропорты, аэродромы, вертолётные площадки и гидроаэродромы из открытой базы OurAirports. Нажми на точку, чтобы открыть карточку и запросить METAR.</p></section>
+<section><p class="eyebrow">GLOBAL AIRPORT MAP</p><h1>Все аэропорты мира</h1><p class="intro">На карте отмечены только действующие аэропорты и аэродромы из открытой базы OurAirports. Нажми на точку, чтобы открыть карточку и запросить METAR.</p></section>
 <section class="card"><h2 id="weather-title">Погода METAR</h2><p class="hint">Введи ICAO-код аэропорта или выбери точку на карте.</p><form id="metar-form" class="search"><input id="icao" maxlength="4" minlength="4" pattern="[A-Za-z0-9]{4}" placeholder="ICAO, например ESSA" autocomplete="off" required><button id="metar-btn" type="submit">Получить</button></form><div id="metar-result" class="result" aria-live="polite">Выбери аэропорт на карте или введи его ICAO-код.</div></section>
 <section>
   <div class="list-head"><p class="eyebrow">ПОИСК АЭРОПОРТА</p><span class="count" id="airport-count">База загружается…</span></div>
@@ -29,7 +29,7 @@
 </section>
 <div class="empty" id="data-note">Трафик самолётов и активные диспетчеры появятся только после подключения реальных источников AeroNet / JoinFS. Сейчас отображаются аэропорты, а не самолёты.</div>
 <div class="legend"><span class="legend-mark"></span> Аэропорт · кластеры объединяют близкие точки</div>
-<footer class="foot">Аэропортовые координаты: OurAirports, открытые данные общественного достояния; база обновляется ежедневно, но может содержать неточности. Подложка: © OpenStreetMap contributors. METAR: metars.eu / NOAA Aviation Weather Center. Не использовать для реальных полётов.</footer>
+<footer class="foot">Аэропорты: OurAirports, открытые данные общественного достояния; вертолётные площадки и водные аэродромы исключены. Подложка: © OpenStreetMap contributors. METAR: metars.eu / NOAA Aviation Weather Center. Не использовать для реальных полётов.</footer>
 </aside>
 <main class="mapwrap"><div id="map" role="application" aria-label="Интерактивная карта всех аэропортов мира"></div><div class="maptag"><b>АЭРОПОРТЫ МИРА</b><span id="map-status">Подключаем карту…</span></div></main>
 </div>
@@ -64,16 +64,22 @@
   function visibilityText(v){if(!v||typeof v!=='object')return v||'—';if(v.unit&&v.unit!=='M')return (v.distance==null?'':v.distance)+' '+v.unit;const metres=v.meters!=null?v.meters:v.distance;if(metres==null)return asText(v);return metres>=1000?(metres/1000).toFixed(metres%1000===0?0:1)+' км':metres+' м';}
   function cloudsText(c){if(!Array.isArray(c)||!c.length)return 'Нет данных';return c.map(function(x){return [x.type,x.height!=null?x.height+' ft':'',x.modifier].filter(Boolean).join(' ');}).join(', ');}
   function renderMetar(report,code,airportName){
-    const raw=report.rawText||report.raw_text||report.raw||report.metar||report.rawOb;
+    const raw=report.rawText||report.raw_text||report.raw||report.metar||report.rawOb||'';
     if(!raw)throw new Error('В ответе сервиса нет исходной строки METAR.');
     const temp=report.temperature&&typeof report.temperature==='object'?report.temperature:{};
-    const tempValue=temp.temp!=null?temp.temp:'—';
-    const dewValue=temp.dewPoint!=null?temp.dewPoint:(report.dewpoint!=null?report.dewpoint:'—');
-    const qnh=report.qnh!=null?report.qnh:(report.altimeter&&report.altimeter.value!=null?report.altimeter.value:report.altimeter);
+    const numeric=function(){for(let i=0;i<arguments.length;i++){const v=arguments[i];if(v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v)))return Number(v);}return null;};
+    const rawTemp=raw.match(/\\s(M?\\d{2})\\/(M?\\d{2})\\s/);
+    const rawQnh=raw.match(/\\s(Q|A)(\\d{4})\\b/);
+    const parseSigned=function(v){return v==null?null:(String(v).charAt(0)==='M'?-Number(String(v).slice(1)):Number(v));};
+    const tempValue=numeric(temp.temp,temp.value,report.temperatureC,report.temperature_c,report.temp)??(rawTemp?parseSigned(rawTemp[1]):null);
+    const dewValue=numeric(temp.dewPoint,temp.dewpoint,temp.dew_point,report.dewpoint,report.dewPoint,report.dew_point)??(rawTemp?parseSigned(rawTemp[2]):null);
+    let qnh=numeric(report.qnh,report.pressure,report.altimeter&&report.altimeter.value,report.altimeter&&report.altimeter.hpa);
+    let qnhUnit=(report.altimeter&&report.altimeter.unit)||report.qnh_unit||'hPa';
+    if(qnh===null&&rawQnh){qnh=Number(rawQnh[2]);qnhUnit=rawQnh[1]==='A'?'inHg':'hPa';if(rawQnh[1]==='A')qnh=qnh/100;}
     const weather=Array.isArray(report.weather)?report.weather.map(function(x){return x.description||x.code||'';}).filter(Boolean).join(', '):'';
     result.innerHTML='<b style="color:#65d6a5">'+esc(code)+' · METAR получен</b>'+(airportName?'<div style="margin-top:3px;color:#91a4bc">'+esc(airportName)+'</div>':'')+
-      '<div style="margin-top:4px;color:#91a4bc;font-size:10px">Время наблюдения UTC: '+esc(report.timestamp||'—')+'</div>'+
-      '<div class="weather-grid">'+cell('Ветер',windText(report.wind))+cell('Видимость',visibilityText(report.visibility))+cell('Температура',tempValue+' °C')+cell('Dewpoint / точка росы',dewValue+' °C')+cell('QNH',qnh==null?'—':qnh+' hPa')+cell('Облачность',cloudsText(report.clouds))+cell('Явления',weather||'Нет значимых явлений')+'</div>'+
+      '<div style="margin-top:4px;color:#91a4bc;font-size:10px">Время наблюдения UTC: '+esc(report.timestamp||report.observedAt||'—')+'</div>'+
+      '<div class="weather-grid">'+cell('Ветер',windText(report.wind))+cell('Видимость',visibilityText(report.visibility))+cell('Температура',tempValue===null?'—':tempValue+' °C')+cell('Dewpoint / точка росы',dewValue===null?'—':dewValue+' °C')+cell('QNH / давление',qnh===null?'—':qnh+' '+qnhUnit)+cell('Облачность',cloudsText(report.clouds))+cell('Явления',weather||'Нет значимых явлений')+'</div>'+
       '<code class="raw">'+esc(raw)+'</code><div style="margin-top:8px;color:#91a4bc;font-size:10px">Источник: <a style="color:#57d8e8" href="https://metars.eu/learn/api" target="_blank" rel="noopener noreferrer">metars.eu</a>. Данные NOAA обновляются с задержкой.</div>';
   }
   let requestId=0;
@@ -103,15 +109,15 @@
     fields.push(value);return fields;
   }
   function typeLabel(type){
-    return ({large_airport:'Крупный аэропорт',medium_airport:'Средний аэропорт',small_airport:'Небольшой аэродром',heliport:'Вертолётная площадка',seaplane_base:'Гидроаэродром',balloonport:'Аэростатная площадка',closed_airport:'Закрытый аэропорт'})[type]||'Аэропорт';
+    return ({large_airport:'Крупный аэропорт',medium_airport:'Средний аэропорт',small_airport:'Небольшой аэропорт'})[type]||'Аэропорт';
   }
   const icons={};
-  ['large_airport','medium_airport','small_airport','heliport','seaplane_base','balloonport','closed_airport'].forEach(function(type){
+  ['large_airport','medium_airport','small_airport'].forEach(function(type){
     icons[type]=L.divIcon({className:'',html:'<span class="airport-marker '+type+'"></span>',iconSize:[14,14],iconAnchor:[7,7]});
   });
   const clusterGroup=typeof L.markerClusterGroup==='function'?L.markerClusterGroup({
     chunkedLoading:true,chunkInterval:120,chunkDelay:30,maxClusterRadius:42,showCoverageOnHover:false,spiderfyOnMaxZoom:true,
-    chunkProgress:function(processed,total){mapStatus.textContent='Добавляем точки аэропортов: '+Math.round(processed/total*100)+'%';if(processed===total)mapStatus.textContent=allAirports.length.toLocaleString('ru-RU')+' аэропортов и аэродромов · готово';},
+    chunkProgress:function(processed,total){mapStatus.textContent='Добавляем точки аэропортов: '+Math.round(processed/total*100)+'%';if(processed===total)mapStatus.textContent=allAirports.length.toLocaleString('ru-RU')+' аэропортов · готово';},
     iconCreateFunction:function(cluster){const count=cluster.getChildCount();const size=count<100?'small':count<1000?'medium':'large';return L.divIcon({html:'<div class="airport-cluster">'+count.toLocaleString('en-US')+'</div>',className:'marker-cluster marker-cluster-'+size,iconSize:L.point(46,46)});}
   }):null;
   if(!clusterGroup){result.textContent='Не удалось загрузить модуль группировки точек. Обнови страницу или попробуй позже.';topStatus.textContent='ОШИБКА КАРТЫ';return;}
@@ -136,13 +142,18 @@
     shown.forEach(function(airport){
       const row=document.createElement('button');row.type='button';row.className='airport-row';row.dataset.key=airport.id;
       const code=airport.icao||airport.ident;
-      row.innerHTML='<span class="airport-dot" style="background:'+(airport.type==='closed_airport'?'#788493':airport.type==='heliport'?'#e4a344':'#43c2dc')+'"></span><span class="airport-label"><b>'+esc(code)+' · '+esc(airport.name)+'</b><small>'+esc(airport.city||airport.country||typeLabel(airport.type))+' · '+esc(typeLabel(airport.type))+'</small></span><span class="airport-arrow">›</span>';
+      row.innerHTML='<span class="airport-dot" style="background:'+('#43c2dc')+'"></span><span class="airport-label"><b>'+esc(code)+' · '+esc(airport.name)+'</b><small>'+esc(airport.city||airport.country||typeLabel(airport.type))+' · '+esc(typeLabel(airport.type))+'</small></span><span class="airport-arrow">›</span>';
       row.addEventListener('click',function(){selectAirport(airport,true);});
       airportList.appendChild(row);
     });
     if(items.length>shown.length){const note=document.createElement('div');note.className='count';note.textContent='Показаны первые '+shown.length+' из '+items.length+'. Уточни поиск.';airportList.appendChild(note);}
   }
+  let filterTimer=null;
   function onFilter(){
+    if(filterTimer)clearTimeout(filterTimer);
+    filterTimer=setTimeout(applyFilter,120);
+  }
+  function applyFilter(){
     const q=airportFilter.value.trim().toLowerCase();
     if(!q){
       const featured=allAirports.filter(function(a){return a.type==='large_airport'||a.type==='medium_airport';}).slice(0,20);
@@ -172,12 +183,13 @@
     const idx={};headers.forEach(function(h,i){idx[h]=i;});
     const get=function(row,key){return row[idx[key]]==null?'':row[idx[key]].trim();};
     const airports=[];const markers=[];
+    const allowedTypes=new Set(['large_airport','medium_airport','small_airport']);
     for(let i=1;i<lines.length;i++){
       const line=lines[i];if(!line)continue;
       const row=parseCsvLine(line);
       const latRaw=get(row,'latitude_deg');const lonRaw=get(row,'longitude_deg');if(!latRaw||!lonRaw)continue;
       const lat=Number(latRaw);const lon=Number(lonRaw);
-      const type=get(row,'type');if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;
+      const type=get(row,'type');if(!allowedTypes.has(type)||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;
       const airport={
         id:get(row,'id')||get(row,'ident')||String(i),
         ident:get(row,'ident'),icao:get(row,'icao_code').toUpperCase(),iata:get(row,'iata_code').toUpperCase(),
@@ -190,10 +202,19 @@
       markers.push(marker);
     }
     allAirports=airports;
-    airportCount.textContent=airports.length.toLocaleString('ru-RU')+' точек';
-    mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов и аэродромов';
+    airportCount.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов';
+    mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов';
     topStatus.textContent='АЭРОПОРТЫ ЗАГРУЖЕНЫ';
-    clusterGroup.addLayers(markers);
+    const batchSize=600;
+    let offset=0;
+    function addMarkerBatch(){
+      const batch=markers.slice(offset,offset+batchSize);
+      if(batch.length)clusterGroup.addLayers(batch);
+      offset+=batch.length;
+      if(offset<markers.length){mapStatus.textContent='Загрузка точек: '+Math.round(offset/markers.length*100)+'%';setTimeout(addMarkerBatch,0);}
+      else{mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов · готово';}
+    }
+    addMarkerBatch();
     onFilter();
   }
   form.addEventListener('submit',function(event){

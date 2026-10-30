@@ -4,138 +4,63 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0b1220">
-<meta name="description" content="AeroNet — worldwide airport map and live METAR weather.">
 <title>AeroNet — Global Airport Map</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--panel2:#162338;--line:#26364d;--text:#edf4ff;--muted:#91a3bb;--accent:#58d7e8;--good:#67d6a5;--warn:#f1bd68}
-*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}body{overflow:hidden}.app{height:100%;display:flex;flex-direction:column}.topbar{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0d1727;border-bottom:1px solid var(--line);z-index:500}.brand{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:800;letter-spacing:.08em}.brand-mark{width:34px;height:34px;border:1px solid #3b7187;border-radius:10px;display:grid;place-items:center;color:var(--accent);font-size:19px}.brand small{display:block;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.16em;margin-top:2px}.top-status{font-size:11px;letter-spacing:.12em;color:var(--good);font-weight:700}.main{min-height:0;flex:1;display:grid;grid-template-columns:340px minmax(0,1fr)}.sidebar{background:var(--panel);border-right:1px solid var(--line);padding:20px;overflow:auto;z-index:400}.eyebrow{font-size:10px;color:var(--accent);font-weight:800;letter-spacing:.16em;margin:0 0 10px}.intro{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 22px}.search-label{font-size:11px;color:#b7c6d9;font-weight:700;display:block;margin-bottom:8px}.search-row{display:flex;gap:7px}.search-row input{min-width:0;flex:1;background:#0b1524;border:1px solid var(--line);border-radius:8px;padding:12px;color:var(--text);font-size:14px;outline:none;text-transform:uppercase}.search-row input:focus{border-color:var(--accent)}button{border:0;border-radius:8px;background:var(--accent);color:#06131c;font-weight:800;padding:0 15px;cursor:pointer}button:hover{filter:brightness(1.08)}.hint{font-size:10px;color:var(--muted);margin:8px 0 20px;line-height:1.5}.section-head{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;font-size:11px;letter-spacing:.12em;font-weight:800;color:#c9d6e7}.count{color:var(--accent);font-variant-numeric:tabular-nums}.airport-list{display:grid;gap:7px}.airport-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px;background:var(--panel2);border:1px solid transparent;border-radius:8px;color:var(--text)}.airport-item:hover,.airport-item.active{border-color:#3d8292;background:#192b40}.airport-code{width:42px;flex:0 0 42px;color:var(--accent);font-size:12px;font-weight:800}.airport-name{min-width:0}.airport-name strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.airport-name span{display:block;color:var(--muted);font-size:10px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.note{border-top:1px solid var(--line);margin-top:20px;padding-top:14px;color:var(--muted);font-size:10px;line-height:1.6}.map-wrap{position:relative;min-width:0;min-height:0;background:#dfe5e9}#map{height:100%;width:100%;background:#e8edf0}.map-credit{position:absolute;left:12px;bottom:10px;z-index:450;background:#101b2bcc;color:#e3edf8;border:1px solid #ffffff26;border-radius:6px;padding:7px 9px;font-size:10px;pointer-events:none}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#111d2e;color:var(--text)}.leaflet-popup-content{margin:13px 15px;min-width:230px}.popup-title{font-weight:800;font-size:14px;margin-bottom:3px}.popup-sub{color:var(--muted);font-size:11px;margin-bottom:12px}.metar-loading{font-size:12px;color:var(--accent);padding:8px 0}.metar-error{font-size:12px;color:var(--warn);line-height:1.5}.metar-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.metar-cell{background:#1a2a40;border-radius:6px;padding:8px}.metar-cell span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.08em}.metar-cell strong{display:block;font-size:13px;margin-top:4px}.raw-metar{font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;color:#c5d7e9;border-top:1px solid var(--line);padding-top:9px;margin-top:8px}.leaflet-container{font-family:Inter,Segoe UI,Arial,sans-serif}.airport-dot{width:12px;height:12px;border-radius:50%;background:#12a9c4;border:2px solid white;box-shadow:0 0 0 2px #087c96,0 2px 7px #0007}.leaflet-control-attribution{font-size:9px!important}@media(max-width:760px){.topbar{height:56px;flex-basis:56px;padding:0 14px}.main{grid-template-columns:1fr;grid-template-rows:250px minmax(0,1fr)}.sidebar{border-right:0;border-bottom:1px solid var(--line);padding:13px 15px}.intro{display:none}.section-head{margin:12px 0 8px}.airport-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.airport-item{padding:8px}.note{display:none}.top-status{font-size:9px}.brand{font-size:16px}.map-credit{font-size:9px}}
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--line:#26364d;--text:#edf4ff;--muted:#93a7c2;--blue:#52b7ff}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}body{overflow:hidden}
+.app{height:100%;display:grid;grid-template-columns:330px 1fr}.side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--line);z-index:500}
+header{padding:18px;border-bottom:1px solid var(--line)}h1{font-size:20px;margin:0}.sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px}
+.searchbox{padding:14px 15px 8px}input{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:#0b1524;color:white;font:inherit;outline:none}input:focus{border-color:var(--blue)}
+.stats{display:flex;gap:8px;padding:5px 15px 12px}.stat{flex:1;background:#172438;border:1px solid var(--line);padding:8px;border-radius:8px}.stat b{display:block;font-size:16px}.stat small{color:var(--muted);font-size:10px}
+.section{padding:9px 16px;border-block:1px solid var(--line);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#a9bdd6;display:flex;justify-content:space-between}
+#results{overflow:auto;min-height:0;flex:1}.item{padding:11px 16px;border-bottom:1px solid #223148;cursor:pointer}.item:hover,.item.active{background:#1a2b42}.top{display:flex;justify-content:space-between}.code{color:#75caff;font-weight:800;font-size:12px}.type{color:var(--muted);font-size:9px;text-transform:uppercase}.name{font-size:12px;margin-top:4px}.place{font-size:10px;color:var(--muted);margin-top:3px}.empty{padding:20px;color:var(--muted);font-size:12px;line-height:1.5}
+footer{padding:10px 15px;border-top:1px solid var(--line);font-size:10px;color:var(--muted);line-height:1.5}
+.mapwrap{min-width:0;min-height:0;position:relative}#map{height:100%;width:100%;background:#e1e6e8}.status{position:absolute;z-index:450;bottom:13px;left:13px;background:#101b2bef;border:1px solid #34465f;border-radius:8px;padding:9px 12px;font-size:11px;color:#c3d2e5;pointer-events:none}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#111c2d;color:var(--text)}.leaflet-popup-content-wrapper{border:1px solid #34465f;border-radius:10px}.leaflet-popup-content{margin:13px 15px;min-width:220px}.leaflet-popup-close-button{color:#a9bdd6!important}
+.pcode{font-size:15px;font-weight:900;color:#70c7ff}.pname{font-size:12px;font-weight:700;margin-top:3px}.ploc{font-size:10px;color:var(--muted);margin-top:3px}.label{font-size:9px;color:#91a9c6;text-transform:uppercase;letter-spacing:1px;margin:10px 0 5px}.metar{font:11px/1.55 ui-monospace,monospace;overflow-wrap:anywhere;color:#dbe8f7}.state{font-size:11px;color:var(--muted);line-height:1.5}.error{color:#ff9ba2}.refresh{margin-top:9px;padding:6px 9px;background:#1a2d45;border:1px solid #3a5878;border-radius:6px;color:#bfe5ff;cursor:pointer}
+@media(max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:44% 56%}header{padding:9px 13px}h1{font-size:16px}.searchbox{padding:8px 12px 5px}input{padding:8px}.stats{padding:3px 12px 8px}.stat{padding:6px}.stat b{font-size:13px}#results{display:grid;grid-template-columns:1fr 1fr;align-content:start}.item{padding:8px 10px}footer{display:none}.mapwrap{grid-row:2}.side{border-right:0;border-bottom:1px solid var(--line)}}
 </style>
 </head>
 <body>
 <div class="app">
-<header class="topbar"><div class="brand"><div class="brand-mark">✈</div><div>AERONET<small>GLOBAL FLIGHT WEATHER</small></div></div><div class="top-status" id="systemStatus">STARTING MAP…</div></header>
-<main class="main">
-<aside class="sidebar">
-<p class="eyebrow">WORLDWIDE AIRPORT NETWORK</p>
-<p class="intro">Explore major international airports around the world. Select an airport marker to retrieve its latest available METAR weather report.</p>
-<form id="searchForm"><label class="search-label" for="icaoInput">FIND AIRPORT BY ICAO</label><div class="search-row"><input id="icaoInput" maxlength="4" placeholder="EGLL" autocomplete="off" spellcheck="false"><button type="submit">FIND</button></div><p class="hint" id="searchHint">Enter a four-letter ICAO code, for example ZBAD or USSS.</p></form>
-<div class="section-head"><span>MAJOR AIRPORTS</span><span class="count" id="airportCount">0</span></div>
-<div class="airport-list" id="airportList"></div>
-<div class="note">METAR reports are requested live when an airport is selected. Availability and update frequency depend on the reporting station and data provider. No simulated aircraft or ATC positions are displayed.</div>
+<aside class="side">
+<header><h1>✈ AeroNet</h1><div class="sub">GLOBAL AIRPORT MAP · LIVE METAR</div></header>
+<div class="searchbox"><input id="search" type="search" placeholder="Search ICAO, IATA, airport or city…" autocomplete="off"></div>
+<div class="stats"><div class="stat"><b id="total">—</b><small>Airports loaded</small></div><div class="stat"><b id="visible">0</b><small>On map</small></div></div>
+<div class="section"><span>Airports in view</span><span id="zoom">ZOOM —</span></div>
+<div id="results"><div class="empty">Loading worldwide airport data…</div></div>
+<footer>Tiles: CARTO Positron · Airport data: OurAirports · METAR: VATSIM<br>No simulated aircraft or ATC traffic.</footer>
 </aside>
-<section class="map-wrap" aria-label="World airport map"><div id="map"></div><div class="map-credit">English-label basemap · OpenStreetMap data · CARTO</div></section>
-</main>
+<main class="mapwrap"><div id="map"></div><div class="status" id="status">Loading map…</div></main>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
-'use strict';
-const airports=[
-{icao:'ZBAD',name:'Beijing Daxing International',city:'Beijing',country:'China',lat:39.5098,lon:116.4105},
-{icao:'ZBAA',name:'Beijing Capital International',city:'Beijing',country:'China',lat:40.0799,lon:116.6031},
-{icao:'ZSPD',name:'Shanghai Pudong International',city:'Shanghai',country:'China',lat:31.1443,lon:121.8083},
-{icao:'RJTT',name:'Tokyo Haneda',city:'Tokyo',country:'Japan',lat:35.5494,lon:139.7798},
-{icao:'RKSI',name:'Incheon International',city:'Seoul',country:'South Korea',lat:37.4602,lon:126.4407},
-{icao:'WSSS',name:'Singapore Changi',city:'Singapore',country:'Singapore',lat:1.3644,lon:103.9915},
-{icao:'VHHH',name:'Hong Kong International',city:'Hong Kong',country:'China',lat:22.3080,lon:113.9185},
-{icao:'OMDB',name:'Dubai International',city:'Dubai',country:'United Arab Emirates',lat:25.2532,lon:55.3657},
-{icao:'OTHH',name:'Hamad International',city:'Doha',country:'Qatar',lat:25.2731,lon:51.6081},
-{icao:'EGLL',name:'London Heathrow',city:'London',country:'United Kingdom',lat:51.4700,lon:-0.4543},
-{icao:'LFPG',name:'Paris Charles de Gaulle',city:'Paris',country:'France',lat:49.0097,lon:2.5479},
-{icao:'EDDF',name:'Frankfurt Airport',city:'Frankfurt',country:'Germany',lat:50.0379,lon:8.5622},
-{icao:'UUEE',name:'Sheremetyevo International',city:'Moscow',country:'Russia',lat:55.9726,lon:37.4146},
-{icao:'USSS',name:'Koltsovo International',city:'Yekaterinburg',country:'Russia',lat:56.7431,lon:60.8027},
-{icao:'UWWW',name:'Kurumoch International',city:'Samara',country:'Russia',lat:53.5049,lon:50.1643},
-{icao:'KJFK',name:'John F. Kennedy International',city:'New York',country:'United States',lat:40.6413,lon:-73.7781},
-{icao:'KLAX',name:'Los Angeles International',city:'Los Angeles',country:'United States',lat:33.9416,lon:-118.4085},
-{icao:'CYYZ',name:'Toronto Pearson International',city:'Toronto',country:'Canada',lat:43.6777,lon:-79.6248},
-{icao:'SBGR',name:'São Paulo Guarulhos International',city:'São Paulo',country:'Brazil',lat:-23.4356,lon:-46.4731},
-{icao:'FAOR',name:'O. R. Tambo International',city:'Johannesburg',country:'South Africa',lat:-26.1337,lon:28.2420},
-{icao:'YSSY',name:'Sydney Kingsford Smith',city:'Sydney',country:'Australia',lat:-33.9399,lon:151.1753}
-];
-const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([25,10],2);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
- subdomains:'abcd',maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-}).addTo(map);
-const markerIcon=L.divIcon({className:'',html:'<div class="airport-dot"></div>',iconSize:[16,16],iconAnchor:[8,8]});
-const markerByIcao=new Map(),list=document.getElementById('airportList'),count=document.getElementById('airportCount'),status=document.getElementById('systemStatus'),input=document.getElementById('icaoInput'),hint=document.getElementById('searchHint');
-count.textContent=String(airports.length);
-function escapeHtml(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
-function parseMetar(raw){
- const result={wind:'—',visibility:'—',temperature:'—',dewpoint:'—',pressure:'—',clouds:'—',weather:'—'};
- let m=raw.match(/\b(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?KT\b/);
- if(m)result.wind=(m[1]==='VRB'?'Variable':m[1]+'°')+' '+m[2]+' kt'+(m[3]?' gust '+m[3]+' kt':'');
- m=raw.match(/\b(CAVOK|\d{4})\b/);if(m)result.visibility=m[1]==='CAVOK'||Number(m[1])>=9999?'10 km or more':(Number(m[1])/1000).toFixed(1)+' km';
- m=raw.match(/\s(M?\d{2})\/(M?\d{2})\s/);if(m){result.temperature=m[1].replace('M','-')+' °C';result.dewpoint=m[2].replace('M','-')+' °C';}
- m=raw.match(/\bQ(\d{4})\b/);if(m)result.pressure=m[1]+' hPa';else{m=raw.match(/\bA(\d{4})\b/);if(m)result.pressure=(Number(m[1])/100).toFixed(2)+' inHg';}
- const clouds=raw.match(/\b(FEW|SCT|BKN|OVC|VV)\d{3}(?:CB|TCU)?\b/g);if(clouds)result.clouds=clouds.join(' · ');
- const wx=raw.match(/(?:^|\s)(?:\+|-)?(?:MI|PR|BC|DR|BL|SH|TS|FZ)?(?:DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)(?=\s|$)/g);if(wx)result.weather=wx.join(' ').trim();
- return result;
-}
-function metarMarkup(report){
- const d=parseMetar(report);
- return '<div class="metar-grid">'+[['Wind',d.wind],['Visibility',d.visibility],['Temperature',d.temperature],['Dewpoint',d.dewpoint],['Pressure',d.pressure],['Clouds',d.clouds],['Weather',d.weather]].map(function(item){return '<div class="metar-cell"><span>'+escapeHtml(item[0])+'</span><strong>'+escapeHtml(item[1])+'</strong></div>';}).join('')+'</div><div class="raw-metar">'+escapeHtml(report)+'</div>';
-}
-function extractRaw(data){
- if(typeof data==='string')return data.trim();
- if(Array.isArray(data))return extractRaw(data[0]||'');
- if(!data||typeof data!=='object')return '';
- const direct=data.rawText||data.raw_text||data.raw||data.metar||data.rawMetar||'';
- if(direct)return String(direct).trim();
- if(data.data)return extractRaw(data.data);
- if(data.report)return extractRaw(data.report);
- return '';
-}
-async function fetchMetar(icao,container){
- container.innerHTML='<div class="metar-loading">Requesting latest METAR…</div>';
- const endpoints=['https://metars.eu/api/metars/'+encodeURIComponent(icao)+'/decoded','https://metar.vatsim.net/'+encodeURIComponent(icao)];
- let lastError=null;
- for(const url of endpoints){
-  try{
-   const response=await fetch(url,{headers:{'Accept':'application/json,text/plain,*/*'},cache:'no-store'});
-   if(!response.ok)throw new Error('HTTP '+response.status);
-   const body=await response.text();
-   let data=body;try{data=JSON.parse(body);}catch(ignore){}
-   const raw=extractRaw(data);
-   if(!raw||!/\b[A-Z]{4}\s+\d{6}Z\b/.test(raw))throw new Error('No valid raw METAR in response');
-   container.innerHTML=metarMarkup(raw);return;
-  }catch(error){lastError=error;}
- }
- container.innerHTML='<div class="metar-error">METAR is unavailable for '+escapeHtml(icao)+' right now. The station may not have a current report, or the data service may be temporarily unreachable. Try again later.</div>';
- console.warn('METAR request failed for '+icao,lastError);
-}
-function selectAirport(airport,zoom){
- const marker=markerByIcao.get(airport.icao);
- if(zoom)map.flyTo([airport.lat,airport.lon],Math.max(map.getZoom(),7),{duration:.7});
- document.querySelectorAll('.airport-item').forEach(function(el){el.classList.toggle('active',el.dataset.icao===airport.icao);});
- const popup=document.createElement('div');
- popup.innerHTML='<div class="popup-title">'+escapeHtml(airport.name)+'</div><div class="popup-sub">'+escapeHtml(airport.icao)+' · '+escapeHtml(airport.city)+', '+escapeHtml(airport.country)+'</div><div class="metar-loading">Preparing METAR…</div>';
- marker.bindPopup(popup,{maxWidth:330}).openPopup();
- const loading=popup.querySelector('.metar-loading');
- if(loading)fetchMetar(airport.icao,loading);
-}
-airports.forEach(function(airport){
- const marker=L.marker([airport.lat,airport.lon],{icon:markerIcon,title:airport.icao+' — '+airport.name,alt:airport.icao+' '+airport.name}).addTo(map);
- markerByIcao.set(airport.icao,marker);
- marker.on('click',function(){selectAirport(airport,false);});
- const button=document.createElement('button');
- button.type='button';button.className='airport-item';button.dataset.icao=airport.icao;
- button.innerHTML='<span class="airport-code">'+escapeHtml(airport.icao)+'</span><span class="airport-name"><strong>'+escapeHtml(airport.name)+'</strong><span>'+escapeHtml(airport.city)+', '+escapeHtml(airport.country)+'</span></span>';
- button.addEventListener('click',function(){selectAirport(airport,true);});
- list.appendChild(button);
-});
-document.getElementById('searchForm').addEventListener('submit',function(event){
- event.preventDefault();
- const code=input.value.trim().toUpperCase();
- if(!/^[A-Z]{4}$/.test(code)){hint.textContent='Please enter a valid four-letter ICAO code.';return;}
- const airport=airports.find(function(item){return item.icao===code;});
- if(airport){hint.textContent='Airport found: '+airport.name;selectAirport(airport,true);return;}
- hint.textContent=code+' is not in the featured airport list. Select a listed airport to view its METAR.';
-});
-status.textContent='MAP READY · '+airports.length+' AIRPORTS';
-setTimeout(function(){map.invalidateSize();},150);
-window.addEventListener('resize',function(){map.invalidateSize();});
+"use strict";
+const map=L.map("map",{center:[25,10],zoom:2,minZoom:2,maxZoom:19,preferCanvas:true,worldCopyJump:true});
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'}).addTo(map);
+const urls=["https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv","https://davidmegginson.github.io/ourairports-data/airports.csv"];
+const cellSize=5,index=new Map(),all=[],markers=new Map(),layer=L.layerGroup().addTo(map),renderer=L.canvas({padding:.5}),cache=new Map();
+const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let last=[],selected="",timer=0;
+function parseCSV(s){let rows=[],row=[],v="",q=false;for(let i=0;i<s.length;i++){let c=s[i];if(q){if(c==='"'&&s[i+1]==='"'){v+='"';i++}else if(c==='"')q=false;else v+=c}else if(c==='"')q=true;else if(c===","){row.push(v);v=""}else if(c==="\n"){row.push(v);rows.push(row);row=[];v=""}else if(c!=="\r")v+=c}if(v||row.length){row.push(v);rows.push(row)}let h=rows.shift()||[];return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||""])))}
+function add(a){let k=Math.floor(a.lat/cellSize)+":"+Math.floor(a.lon/cellSize);if(!index.has(k))index.set(k,[]);index.get(k).push(a)}
+async function load(){let err;for(const url of urls){try{let res=await fetch(url);if(!res.ok)throw Error("HTTP "+res.status);let rows=parseCSV(await res.text());for(const r of rows){let type=r.type,lat=Number(r.latitude_deg),lon=Number(r.longitude_deg),icao=(r.ident||"").toUpperCase();if(!["large_airport","medium_airport","small_airport","heliport","seaplane_base"].includes(type)||!icao||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;let a={id:icao+"|"+lat+"|"+lon,icao,name:r.name||"Unnamed airport",type,lat,lon,city:r.municipality||"",country:r.iso_country||"",iata:r.iata_code||""};all.push(a);add(a)}if(!all.length)throw Error("Airport list is empty");all.sort((a,b)=>a.name.localeCompare(b.name));$("total").textContent=all.length.toLocaleString();draw();return}catch(e){err=e}}$("results").innerHTML='<div class="empty">Could not load airport data. Check your connection and reload.<br>'+esc(err?.message||"")+'</div>';$("status").textContent="Airport data unavailable"}
+function types(z){if(z<4)return new Set(["large_airport"]);if(z<6)return new Set(["large_airport","medium_airport"]);if(z<9)return new Set(["large_airport","medium_airport","small_airport"]);if(z<11)return new Set(["large_airport","medium_airport","small_airport","seaplane_base"]);return new Set(["large_airport","medium_airport","small_airport","seaplane_base","heliport"])}
+function inBounds(b,allowed){let s=b.getSouth(),n=b.getNorth(),w=b.getWest(),e=b.getEast(),ranges=e-w>=360?[[-180,180]]:w< -180?[[w+360,180],[-180,e]]:e>180?[[w,180],[-180,e-360]]:[[w,e]],found=[],seen=new Set();for(let y=Math.floor(s/5);y<=Math.floor(n/5);y++)for(const [lo,hi] of ranges)for(let x=Math.max(-36,Math.floor(lo/5));x<=Math.min(35,Math.floor(hi/5));x++){for(const a of index.get(y+":"+x)||[]){if(seen.has(a.id)||!allowed.has(a.type)||a.lat<s||a.lat>n||!ranges.some(([l,h])=>a.lon>=l&&a.lon<=h))continue;seen.add(a.id);found.push(a)}}return found}
+function style(t){return {renderer,radius:t==="large_airport"?5:t==="medium_airport"?4:3,fillColor:t==="large_airport"?"#087fd1":t==="medium_airport"?"#16a6a0":t==="small_airport"?"#657c98":"#a17bd4",color:"#fff",weight:1,fillOpacity:.94}}
+function draw(){if(!all.length)return;let z=map.getZoom(),visible=inBounds(map.getBounds(),types(z)),ids=new Set(visible.map(a=>a.id));for(const [id,m] of markers)if(!ids.has(id)){layer.removeLayer(m);markers.delete(id)}for(const a of visible)if(!markers.has(a.id)){let m=L.circleMarker([a.lat,a.lon],style(a.type));m.bindTooltip(esc(a.icao)+" · "+esc(a.name));m.on("click",()=>open(a,m));m.addTo(layer);markers.set(a.id,m)}last=visible;$("visible").textContent=visible.length.toLocaleString();$("zoom").textContent="ZOOM "+z;renderList(visible);$("status").innerHTML="<b>"+visible.length.toLocaleString()+"</b> airports in view · "+all.length.toLocaleString()+" worldwide"}
+function renderList(list){let q=$("search").value.trim().toLowerCase(),arr=q?all.filter(a=>(a.icao+" "+a.iata+" "+a.name+" "+a.city+" "+a.country).toLowerCase().includes(q)).slice(0,100):list.slice().sort((a,b)=>rank(a.type)-rank(b.type)||a.name.localeCompare(b.name)).slice(0,80);if(!arr.length){$("results").innerHTML='<div class="empty">No matching airports in this view.</div>';return}$("results").innerHTML=arr.map(a=>'<div class="item '+(a.id===selected?"active":"")+'" data-id="'+esc(a.id)+'"><div class="top"><span class="code">'+esc(a.icao)+'</span><span class="type">'+esc(a.type.replace("_"," "))+'</span></div><div class="name">'+esc(a.name)+'</div><div class="place">'+esc([a.city,a.country].filter(Boolean).join(", "))+'</div></div>').join("")}
+function rank(t){return t==="large_airport"?0:t==="medium_airport"?1:t==="small_airport"?2:3}
+$("results").addEventListener("click",e=>{let el=e.target.closest(".item");if(!el)return;let a=all.find(x=>x.id===el.dataset.id);if(!a)return;selected=a.id;map.setView([a.lat,a.lon],Math.max(8,map.getZoom()));setTimeout(()=>{let m=markers.get(a.id);if(m)open(a,m)},220)});
+$("search").addEventListener("input",()=>renderList(last));
+function getMetar(code){if(!/^[A-Z0-9]{4}$/.test(code))return Promise.reject(Error("No four-character ICAO identifier is available for this airport."));let old=cache.get(code);if(old&&Date.now()-old.time<300000)return Promise.resolve(old.text);return fetch("https://metar.vatsim.net/"+encodeURIComponent(code),{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("METAR service HTTP "+r.status);let t=(await r.text()).trim();if(!t||/^(no data|not found|error)/i.test(t))throw Error("No current METAR report for "+code);cache.set(code,{text:t,time:Date.now()});return t})}
+function decode(raw){let out=[],w=raw.match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/),t=raw.match(/\b(M?\d{2})\/(M?\d{2}|XX)\b/),q=raw.match(/\bQ(\d{4})\b/),alt=raw.match(/\bA(\d{4})\b/),c=raw.match(/\b(?:FEW|SCT|BKN|OVC|VV)\d{3}(?:CB|TCU)?\b/g);if(w)out.push("Wind "+w[1]+"° at "+w[2]+" kt"+(w[3]?" gust "+w[3]+" kt":""));if(t)out.push("Temperature "+t[1].replace("M","-")+"°C · dew point "+t[2].replace("M","-")+"°C");if(q)out.push("QNH "+q[1]+" hPa");else if(alt)out.push("Altimeter "+(Number(alt[1])/100).toFixed(2)+" inHg");if(c)out.push("Clouds "+c.join(", "));return out}
+function open(a,m){selected=a.id;renderList(last);let p=L.popup({maxWidth:330,minWidth:245}).setLatLng([a.lat,a.lon]).setContent('<div class="pcode">'+esc(a.icao)+'</div><div class="pname">'+esc(a.name)+'</div><div class="ploc">'+esc([a.city,a.country].filter(Boolean).join(", "))+'</div><div class="label">Latest METAR · VATSIM</div><div class="state" data-state>Loading report…</div><div data-details></div><button class="refresh" data-refresh>Refresh METAR</button>');m.bindPopup(p).openPopup();p.once("add",()=>fillPopup(a,p));setTimeout(()=>{if(m.isPopupOpen())fillPopup(a,p)},100)}
+function fillPopup(a,p){let root=p.getElement();if(!root||root.dataset.loaded==="yes")return;root.dataset.loaded="yes";let state=root.querySelector("[data-state]"),details=root.querySelector("[data-details]"),button=root.querySelector("[data-refresh]");button.addEventListener("click",()=>{cache.delete(a.icao);root.dataset.loaded="";fillPopup(a,p)});getMetar(a.icao).then(raw=>{if(!root.isConnected)return;state.textContent="Report received · "+new Date().toLocaleTimeString();let d=decode(raw);details.innerHTML=(d.length?'<div class="label">Decoded conditions</div><div class="state">'+d.map(esc).join("<br>")+'</div>':"")+'<div class="label">Raw report</div><div class="metar">'+esc(raw)+'</div>'}).catch(e=>{if(!root.isConnected)return;state.className="state error";state.textContent=e.message+" (The source may restrict browser CORS access.)"})}
+map.on("moveend zoomend",()=>{clearTimeout(timer);timer=setTimeout(draw,100)});
+load();
 })();
 </script>
 </body>

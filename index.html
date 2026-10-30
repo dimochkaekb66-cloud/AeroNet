@@ -102,7 +102,7 @@
   function selectAirport(airport,zoom){
     selected=airport;
     document.querySelectorAll('.airport-row').forEach(function(el){el.classList.toggle('active',el.dataset.icao===airport.icao);});
-    Object.keys(markerByIcao).forEach(function(code){const el=markerByIcao[code].getElement();if(el)el.classList.toggle('selected',code===airport.icao);});
+    Object.keys(markerByIcao).forEach(function(code){const el=markerByIcao[code].getElement();const dot=el&&el.querySelector('.airport-marker');if(dot)dot.classList.toggle('selected',code===airport.icao);});
     if(zoom)map.flyTo([airport.lat,airport.lon],5,{duration:.7});
     markerByIcao[airport.icao].openPopup();
     loadMetar(airport.icao,airport.name+' · '+airport.city);

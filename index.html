@@ -97,7 +97,7 @@ const urls=["https://raw.githubusercontent.com/davidmegginson/ourairports-data/m
 const cellSize=5,index=new Map(),all=[],markers=new Map(),layer=L.layerGroup().addTo(map),renderer=L.canvas({padding:.5}),cache=new Map();
 const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let last=[],selected="",timer=0;
-let atcMode=false,simSocket=null,simConnected=false,aircraftMarker=null,aircraftLast=null;
+let atcMode=false,simSocket=null,simConnected=false,aircraftMarker=null,lastTelemetryAt=0;
 function updateSystemIndicator(){
  const dot=$("state-dot"),button=$("atc-toggle");
  const active=atcMode||simConnected;
@@ -131,7 +131,7 @@ $("password-form").addEventListener("submit",e=>{
 function setSimStatus(message){$("sim-status").textContent=message}
 function removeAircraft(){
  if(aircraftMarker){map.removeLayer(aircraftMarker);aircraftMarker=null}
- aircraftLast=null;
+ lastTelemetryAt=0;
 }
 function numeric(value){
  if(value===undefined||value===null||value==="")return null;
@@ -146,11 +146,14 @@ function updateAircraft(data){
  const altitude=numeric(source.altitude_ft??source.altitude??source.alt_ft??source.alt);
  const heading=numeric(source.heading??source.heading_deg??source.hdg??source.track);
  const callsign=String(source.callsign??source.callSign??source.flight??"USER").trim()||"USER";
+ const groundspeed=numeric(source.groundspeed_kts??source.groundspeed??source.speed_kts??source.speed);
  const aircraft={
   latitude:lat,longitude:lon,altitude:altitude,heading:heading===null?0:((heading%360)+360)%360,
-  callsign:callsign,receivedAt:new Date()
+  groundspeed:groundspeed,callsign:callsign,receivedAt:new Date()
  };
- aircraftLast=aircraft;
+ lastTelemetryAt=Date.now();
+ simConnected=true;
+ updateSystemIndicator();
  const icon=L.divIcon({
   className:"aircraft-div-icon",iconSize:[32,32],iconAnchor:[16,16],
   html:'<div class="aircraft-glyph" style="transform:rotate('+aircraft.heading+'deg)">✈</div>'
@@ -163,7 +166,8 @@ function updateAircraft(data){
   aircraftMarker.setIcon(icon);
  }
  const altText=altitude===null?"Altitude —":("Altitude "+Math.round(altitude).toLocaleString()+" ft");
- const popup='<div class="pcode">'+esc(callsign)+'</div><div class="pname">Your MSFS aircraft</div><div class="ploc">'+lat.toFixed(5)+", "+lon.toFixed(5)+'</div><div class="label">LIVE SIMULATOR TELEMETRY</div><div class="state">'+altText+'<br>Heading '+Math.round(aircraft.heading)+'°<br>Updated '+aircraft.receivedAt.toLocaleTimeString()+'</div>';
+ const speedText=groundspeed===null?"Ground speed —":"Ground speed "+groundspeed.toFixed(1)+" kt";
+ const popup='<div class="pcode">'+esc(callsign)+'</div><div class="pname">Your MSFS aircraft</div><div class="ploc">'+lat.toFixed(5)+", "+lon.toFixed(5)+'</div><div class="label">LIVE SIMULATOR TELEMETRY</div><div class="state">'+altText+'<br>Heading '+Math.round(aircraft.heading)+'°<br>'+speedText+'<br>Updated '+aircraft.receivedAt.toLocaleTimeString()+'</div>';
  aircraftMarker.setPopupContent(popup);
  setSimStatus("Telemetry received · "+callsign+" · "+aircraft.receivedAt.toLocaleTimeString());
  return true;
@@ -195,13 +199,21 @@ $("sim-connect").addEventListener("click",()=>{
  $("sim-connect").textContent="Disconnect";
  socket.onopen=()=>{
   if(simSocket!==socket)return;
-  simConnected=true;setSimStatus("Connected · waiting for aircraft telemetry");
+  simConnected=false;lastTelemetryAt=0;
+  setSimStatus("Connected to bridge · waiting for simulator telemetry");
   updateSystemIndicator();
  };
  socket.onmessage=event=>{
   if(simSocket!==socket)return;
   try{
    const payload=JSON.parse(event.data);
+   if(payload&&payload.type==="status"){
+    simConnected=Boolean(payload.connected);
+    if(!simConnected)removeAircraft();
+    updateSystemIndicator();
+    setSimStatus(payload.message||(simConnected?"MSFS telemetry online":"MSFS offline · aircraft marker removed"));
+    return;
+   }
    const data=payload&&payload.type==="aircraft"?(payload.payload||payload):payload;
    if(!updateAircraft(data))setSimStatus("Connected · received message without valid lat/lon");
   }catch(error){setSimStatus("Connected · ignored non-JSON telemetry message")}
@@ -211,13 +223,21 @@ $("sim-connect").addEventListener("click",()=>{
  };
  socket.onclose=()=>{
   if(simSocket!==socket)return;
-  simSocket=null;simConnected=false;removeAircraft();
+  simSocket=null;simConnected=false;removeAircraft();updateSystemIndicator();
   $("sim-connect").textContent="Connect";
   setSimStatus("Disconnected · simulator link closed");
   updateSystemIndicator();
  };
 });
 updateSystemIndicator();
+setInterval(()=>{
+ if(simSocket&&simSocket.readyState===WebSocket.OPEN&&lastTelemetryAt&&Date.now()-lastTelemetryAt>4500){
+  removeAircraft();
+  simConnected=false;
+  updateSystemIndicator();
+  setSimStatus("Telemetry timeout · aircraft marker removed");
+ }
+},1000);
 function parseCSV(s){let rows=[],row=[],v="",q=false;for(let i=0;i<s.length;i++){let c=s[i];if(q){if(c==='"'&&s[i+1]==='"'){v+='"';i++}else if(c==='"')q=false;else v+=c}else if(c==='"')q=true;else if(c===","){row.push(v);v=""}else if(c==="\n"){row.push(v);rows.push(row);row=[];v=""}else if(c!=="\r")v+=c}if(v||row.length){row.push(v);rows.push(row)}let h=rows.shift()||[];return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||""])))}
 function add(a){let k=Math.floor(a.lat/cellSize)+":"+Math.floor(a.lon/cellSize);if(!index.has(k))index.set(k,[]);index.get(k).push(a)}
 async function load(){let err;for(const url of urls){try{let res=await fetch(url);if(!res.ok)throw Error("HTTP "+res.status);let rows=parseCSV(await res.text());for(const r of rows){let type=r.type,lat=Number(r.latitude_deg),lon=Number(r.longitude_deg),icao=(r.ident||"").toUpperCase();if(!["large_airport","medium_airport","small_airport","heliport","seaplane_base"].includes(type)||!icao||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)continue;let a={id:icao+"|"+lat+"|"+lon,icao,name:r.name||"Unnamed airport",type,lat,lon,city:r.municipality||"",country:r.iso_country||"",iata:r.iata_code||""};all.push(a);add(a)}if(!all.length)throw Error("Airport list is empty");all.sort((a,b)=>a.name.localeCompare(b.name));$("total").textContent=all.length.toLocaleString();draw();return}catch(e){err=e}}$("results").innerHTML='<div class="empty">Could not load airport data. Check your connection and reload.<br>'+esc(err?.message||"")+'</div>';$("status").textContent="Airport data unavailable"}

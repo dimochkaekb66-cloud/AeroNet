@@ -172,12 +172,6 @@ function updateAircraft(data){
  setSimStatus("Telemetry received · "+callsign+" · "+aircraft.receivedAt.toLocaleTimeString());
  return true;
 }
-window.AeroNet=window.AeroNet||{};
-window.AeroNet.updateAircraft=updateAircraft;
-window.addEventListener("message",event=>{
- const message=event.data;
- if(message&&message.source==="aeronet-msfs"&&message.type==="aircraft")updateAircraft(message.payload||message);
-});
 function disconnectSimulator(){
  const socket=simSocket;
  simSocket=null;simConnected=false;

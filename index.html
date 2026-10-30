@@ -4,27 +4,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#08111f">
-<meta name="description" content="AeroNet — лёгкая карта виртуальной авиационной сети и METAR.">
-<title>AeroNet — карта авиации</title>
+<meta name="description" content="AeroNet — интерактивная карта аэропортов и авиационной погоды METAR.">
+<title>AeroNet — карта аэропортов и METAR</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
-:root{color-scheme:dark;--bg:#08111f;--panel:#0d1929;--panel2:#122238;--line:#26394f;--text:#eaf2fc;--muted:#91a4bc;--cyan:#57d8e8;--green:#65d6a5;--amber:#f2bd67}
-*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}body{overflow:hidden}.app{height:100%;display:flex;flex-direction:column}.top{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0b1626;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:12px;background:#123b4b;display:grid;place-items:center;color:var(--cyan);font-size:22px;border:1px solid #236174}.brand strong{font-size:17px;letter-spacing:.18em}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:.16em;margin-top:3px}.status{color:var(--amber);font-size:10px;letter-spacing:.1em;border:1px solid #59472d;border-radius:7px;padding:8px 10px}.layout{display:grid;grid-template-columns:340px minmax(0,1fr);flex:1;min-height:0}.side{background:var(--panel);border-right:1px solid var(--line);padding:22px 18px;display:flex;flex-direction:column;gap:16px;overflow:auto}.eyebrow{font-size:9px;color:#7d95b1;font-weight:800;letter-spacing:.18em;margin:0 0 8px}.side h1{font-size:21px;margin:0}.intro{font-size:12px;line-height:1.6;color:var(--muted);margin:9px 0 0}.card{background:linear-gradient(145deg,#112238,#0c1727);border:1px solid var(--line);border-radius:12px;padding:14px}.card h2{font-size:12px;margin:0 0 5px}.hint{font-size:10px;color:var(--muted);line-height:1.5;margin:0 0 12px}.search{display:flex;gap:7px}.search input{flex:1;min-width:0;background:#081321;border:1px solid #30445c;color:var(--text);border-radius:8px;padding:11px;font-size:12px;text-transform:uppercase;outline:none}.search input:focus{border-color:var(--cyan)}button{border:0;background:#176078;color:#e7fbff;border-radius:8px;padding:0 13px;font-weight:700;font-size:11px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.result{margin-top:12px;font-size:11px;line-height:1.55;color:#c2d2e5;overflow-wrap:anywhere}.result .raw{display:block;margin-top:10px;padding:9px;background:#081321;border-radius:7px;color:#a6bed7;font-family:ui-monospace,monospace}.weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.weather-cell{padding:8px;background:#0a1726;border-radius:7px}.weather-cell small{display:block;color:var(--muted);font-size:9px}.weather-cell b{display:block;margin-top:4px;font-size:12px}.empty{padding:14px;border:1px dashed #34475c;border-radius:9px;color:var(--muted);font-size:11px;line-height:1.6}.legend{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}.foot{margin-top:auto;color:#70839c;font-size:10px;line-height:1.6;border-top:1px solid var(--line);padding-top:13px}.mapwrap{position:relative;min-width:0;min-height:0;background:#d3dedc}#map{position:absolute;inset:0;width:100%;height:100%;background:#d3dedc}.maptag{position:absolute;z-index:500;top:17px;left:17px;padding:11px 14px;border-radius:10px;background:#f8fbfbee;color:#1a2b40;box-shadow:0 5px 22px #06111f30;font-size:11px}.maptag b{display:block;margin-bottom:3px}.maptag span{color:#63758b;font-size:10px}.leaflet-container{font-family:inherit}.leaflet-control-attribution{font-size:10px!important}
-@media(max-width:760px){body{overflow:auto}.app{min-height:100%;height:auto}.top{height:58px;flex-basis:58px;padding:0 14px}.layout{display:flex;flex-direction:column-reverse;min-height:calc(100vh - 58px)}.mapwrap{height:52vh;min-height:330px}.side{border-right:0;border-top:1px solid var(--line);overflow:visible;padding:17px 14px}.status{font-size:8px;padding:7px}.brand strong{font-size:14px}}
+:root{color-scheme:dark;--bg:#08111f;--panel:#0d1929;--line:#26394f;--text:#eaf2fc;--muted:#91a4bc;--cyan:#57d8e8;--green:#65d6a5;--amber:#f2bd67}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}body{overflow:hidden}.app{height:100%;display:flex;flex-direction:column}.top{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0b1626;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:12px;background:#123b4b;display:grid;place-items:center;color:var(--cyan);font-size:22px;border:1px solid #236174}.brand strong{font-size:17px;letter-spacing:.18em}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:.16em;margin-top:3px}.status{color:var(--amber);font-size:10px;letter-spacing:.1em;border:1px solid #59472d;border-radius:7px;padding:8px 10px}.layout{display:grid;grid-template-columns:350px minmax(0,1fr);flex:1;min-height:0}.side{background:var(--panel);border-right:1px solid var(--line);padding:20px 17px;display:flex;flex-direction:column;gap:15px;overflow:auto}.eyebrow{font-size:9px;color:#7d95b1;font-weight:800;letter-spacing:.18em;margin:0 0 8px}.side h1{font-size:21px;margin:0}.intro{font-size:12px;line-height:1.6;color:var(--muted);margin:9px 0 0}.card{background:linear-gradient(145deg,#112238,#0c1727);border:1px solid var(--line);border-radius:12px;padding:13px}.card h2{font-size:12px;margin:0 0 5px}.hint{font-size:10px;color:var(--muted);line-height:1.5;margin:0 0 10px}.search{display:flex;gap:7px}.search input{flex:1;min-width:0;background:#081321;border:1px solid #30445c;color:var(--text);border-radius:8px;padding:10px;font-size:12px;text-transform:uppercase;outline:none}.search input:focus{border-color:var(--cyan)}button{border:0;background:#176078;color:#e7fbff;border-radius:8px;padding:0 12px;font-weight:700;font-size:10px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.result{margin-top:10px;font-size:11px;line-height:1.55;color:#c2d2e5;overflow-wrap:anywhere}.weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.weather-cell{padding:8px;background:#0a1726;border-radius:7px;min-width:0}.weather-cell small{display:block;color:var(--muted);font-size:9px}.weather-cell b{display:block;margin-top:4px;font-size:12px;overflow-wrap:anywhere}.raw{display:block;margin-top:10px;padding:9px;background:#081321;border-radius:7px;color:#a6bed7;font:10px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}.airport-list{display:flex;flex-direction:column;gap:6px}.airport-row{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;background:#0a1726;border:1px solid #20334a;border-radius:8px;text-align:left;color:var(--text)}.airport-row:hover,.airport-row.active{border-color:var(--cyan);background:#10283a}.airport-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 3px #57d8e822}.airport-label{min-width:0;flex:1}.airport-label b{display:block;font-size:11px;letter-spacing:.06em}.airport-label small{display:block;margin-top:3px;color:var(--muted);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.airport-arrow{color:#7890aa;font-size:14px}.empty{padding:11px;border:1px dashed #34475c;border-radius:9px;color:var(--muted);font-size:10px;line-height:1.55}.legend{display:flex;align-items:center;gap:9px;font-size:10px;color:var(--muted)}.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}.foot{color:#70839c;font-size:9px;line-height:1.55;border-top:1px solid var(--line);padding-top:11px}.mapwrap{position:relative;min-width:0;min-height:0;background:#e8edf0}#map{position:absolute;inset:0;width:100%;height:100%;background:#e8edf0}.maptag{position:absolute;z-index:500;top:17px;left:17px;padding:11px 14px;border-radius:10px;background:#f8fbf0f2;color:#1a2b40;box-shadow:0 5px 22px #06111f22;font-size:11px}.maptag b{display:block;margin-bottom:3px}.maptag span{color:#63758b;font-size:10px}.airport-marker{width:13px;height:13px;border:3px solid #fff;border-radius:50%;background:#0e9fb5;box-shadow:0 1px 9px #15304788}.airport-marker.selected{background:#f0a63a;box-shadow:0 0 0 5px #f0a63a44,0 1px 9px #15304788}.leaflet-container{font-family:inherit}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#0d1929;color:#eaf2fc}.leaflet-popup-content{margin:11px 14px;font-size:11px}.leaflet-popup-content b{font-size:12px}.leaflet-control-attribution{font-size:9px!important}
+@media(max-width:760px){body{overflow:auto}.app{min-height:100%;height:auto}.top{height:58px;flex-basis:58px;padding:0 14px}.layout{display:flex;flex-direction:column-reverse;min-height:calc(100vh - 58px)}.mapwrap{height:48vh;min-height:300px}.side{border-right:0;border-top:1px solid var(--line);overflow:visible;padding:16px 13px}.status{font-size:8px;padding:7px}.brand strong{font-size:14px}}
 </style>
 </head>
 <body>
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">✈</div><div><strong>AERONET</strong><small>VIRTUAL AVIATION NETWORK</small></div></div><div class="status">ОЖИДАНИЕ ПОДКЛЮЧЕНИЯ</div></header>
+<header class="top"><div class="brand"><div class="logo">✈</div><div><strong>AERONET</strong><small>VIRTUAL AVIATION NETWORK</small></div></div><div class="status">КАРТА АЭРОПОРТОВ</div></header>
 <div class="layout">
 <aside class="side">
-<section><p class="eyebrow">GLOBAL FLIGHT MAP</p><h1>Карта AeroNet</h1><p class="intro">Карта готова к подключению реального трафика. Неактивные и вымышленные самолёты и диспетчеры не отображаются.</p></section>
-<section class="card"><h2>Погода METAR</h2><p class="hint">Введи четырёхзначный ICAO-код аэропорта, например ESSA, EGLL или KJFK.</p><form id="metar-form" class="search"><input id="icao" maxlength="4" minlength="4" pattern="[A-Za-z0-9]{4}" value="ESSA" placeholder="ICAO" autocomplete="off" required><button id="metar-btn" type="submit">Получить</button></form><div id="metar-result" class="result" aria-live="polite">Нажми «Получить», чтобы запросить актуальную сводку.</div></section>
-<section><p class="eyebrow">LIVE OBJECTS</p><div class="empty">Сейчас нет подключённых самолётов или диспетчеров. Объекты появятся здесь после интеграции JoinFS и сервера AeroNet.</div></section>
-<div class="legend"><span class="dot"></span> Подключение ожидается</div>
-<footer class="foot">AeroNet — независимый проект для авиасимулятора. METAR предоставляется внешним источником и предназначен для симуляции, а не для реального планирования полётов.</footer>
+<section><p class="eyebrow">GLOBAL AIRPORT MAP</p><h1>Аэропорты AeroNet</h1><p class="intro">Нажми на точку или аэропорт в списке, чтобы открыть его карточку и запросить актуальный METAR.</p></section>
+<section class="card"><h2 id="weather-title">Погода METAR</h2><p class="hint">Можно выбрать аэропорт на карте или ввести ICAO-код вручную.</p><form id="metar-form" class="search"><input id="icao" maxlength="4" minlength="4" pattern="[A-Za-z0-9]{4}" placeholder="ICAO, например ESSA" autocomplete="off" required><button id="metar-btn" type="submit">Получить</button></form><div id="metar-result" class="result" aria-live="polite">Выбери аэропорт на карте или введи его ICAO-код. METAR загрузится по запросу.</div></section>
+<section><p class="eyebrow">АЭРОПОРТЫ НА КАРТЕ · 10</p><div id="airport-list" class="airport-list"></div></section>
+<div class="empty">Самолёты и диспетчеры появятся только после подключения реальных источников данных AeroNet / JoinFS. Сейчас карта показывает только существующие аэропорты.</div>
+<div class="legend"><span class="dot"></span> Точка — аэропорт · нажми для METAR</div>
+<footer class="foot">Карта: CARTO / OpenStreetMap. METAR: metars.eu (данные NOAA Aviation Weather Center, кэш сервиса около 2 минут). Данные погоды могут быть задержаны или отсутствовать; не использовать для реального планирования полётов.</footer>
 </aside>
-<main class="mapwrap"><div id="map" role="application" aria-label="Интерактивная карта мира"></div><div class="maptag"><b>КАРТА МИРА</b><span>Реальный трафик появится после подключения</span></div></main>
+<main class="mapwrap"><div id="map" role="application" aria-label="Интерактивная карта аэропортов мира"></div><div class="maptag"><b>АЭРОПОРТЫ МИРА</b><span>Выбери точку, чтобы посмотреть METAR</span></div></main>
 </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -35,43 +36,98 @@
   const form=document.getElementById('metar-form');
   const input=document.getElementById('icao');
   const button=document.getElementById('metar-btn');
+  const weatherTitle=document.getElementById('weather-title');
+  const airportList=document.getElementById('airport-list');
   if(!window.L){mapNode.innerHTML='<div style="padding:24px;color:#17283e">Не удалось загрузить карту. Проверь подключение к интернету и обнови страницу.</div>';return;}
-  const map=L.map('map',{zoomControl:true,worldCopyJump:true,minZoom:2}).setView([18,0],2);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
+  const airports=[
+    {icao:'ESSA',name:'Stockholm Arlanda',city:'Стокгольм, Швеция',lat:59.6519,lon:17.9186},
+    {icao:'EGLL',name:'London Heathrow',city:'Лондон, Великобритания',lat:51.4700,lon:-0.4543},
+    {icao:'KJFK',name:'John F. Kennedy International',city:'Нью-Йорк, США',lat:40.6413,lon:-73.7781},
+    {icao:'CYYZ',name:'Toronto Pearson',city:'Торонто, Канада',lat:43.6777,lon:-79.6248},
+    {icao:'OMDB',name:'Dubai International',city:'Дубай, ОАЭ',lat:25.2532,lon:55.3657},
+    {icao:'WSSS',name:'Singapore Changi',city:'Сингапур',lat:1.3644,lon:103.9915},
+    {icao:'RJTT',name:'Tokyo Haneda',city:'Токио, Япония',lat:35.5494,lon:139.7798},
+    {icao:'YSSY',name:'Sydney Kingsford Smith',city:'Сидней, Австралия',lat:-33.9399,lon:151.1753},
+    {icao:'SBGR',name:'São Paulo–Guarulhos',city:'Сан-Паулу, Бразилия',lat:-23.4356,lon:-46.4731},
+    {icao:'FAOR',name:'O. R. Tambo International',city:'Йоханнесбург, ЮАР',lat:-26.1367,lon:28.2411}
+  ];
+  const map=L.map('map',{zoomControl:true,worldCopyJump:true,minZoom:2}).setView([22,5],2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    subdomains:'abcd',maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>'
   }).addTo(map);
   setTimeout(function(){map.invalidateSize();},150);
   window.addEventListener('resize',function(){map.invalidateSize();});
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-  function pick(obj,keys){for(let i=0;i<keys.length;i++){if(obj[keys[i]]!==undefined&&obj[keys[i]]!==null&&obj[keys[i]]!=='')return obj[keys[i]];}return null;}
-  function cell(label,value){return '<div class="weather-cell"><small>'+esc(label)+'</small><b>'+esc(value==null?'—':value)+'</b></div>';}
-  function render(report,icao){
-    const raw=pick(report,['rawText','raw_text','raw','metar','rawOb']);
-    const wind=pick(report,['wind','windText','wind_text']);
-    const visibility=pick(report,['visibility','visibilityText','visibility_text']);
-    const temp=pick(report,['temperature','temp','temperatureC','temperature_c']);
-    const dew=pick(report,['dewpoint','dewPoint','dewpointC','dewpoint_c']);
-    const qnh=pick(report,['altimeter','qnh','pressure','pressureHpa']);
-    const clouds=pick(report,['clouds','cloudLayers','cloud_layers']);
-    result.innerHTML='<b style="color:#65d6a5">'+esc(icao)+' · METAR получен</b><div class="weather-grid">'+cell('Ветер',typeof wind==='object'?JSON.stringify(wind):wind)+cell('Видимость',typeof visibility==='object'?JSON.stringify(visibility):visibility)+cell('Температура',temp)+cell('Точка росы',dew)+cell('QNH / давление',qnh)+cell('Облачность',typeof clouds==='object'?JSON.stringify(clouds):clouds)+'</div>'+(raw?'<code class="raw">'+esc(raw)+'</code>':'')+'<div style="margin-top:8px;color:#91a4bc;font-size:10px">Источник: metars.eu · данные авиационных метеонаблюдений. Проверь исходную строку METAR.</div>';
+  function asText(value){if(value===null||value===undefined||value==='')return '—';if(typeof value!=='object')return String(value);return JSON.stringify(value);}
+  function cell(label,value){return '<div class="weather-cell"><small>'+esc(label)+'</small><b>'+esc(asText(value))+'</b></div>';}
+  function windText(w){if(!w||typeof w!=='object')return w||'—';const direction=w.direction===null||w.direction===undefined?'VRB':w.direction+'°';return direction+' / '+(w.speed??'—')+' '+(w.unit||'KT')+(w.gust?' G'+w.gust:'');}
+  function visibilityText(v){if(!v||typeof v!=='object')return v||'—';const metres=v.meters??v.distance;if(metres===null||metres===undefined)return asText(v);return metres>=1000?(metres/1000).toFixed(metres%1000===0?0:1)+' км':metres+' м';}
+  function temperatureText(t){if(!t||typeof t!=='object')return t||'—';return (t.temp??'—')+' °C';}
+  function dewText(t){if(!t||typeof t!=='object')return t||'—';return (t.dewPoint??'—')+' °C';}
+  function cloudsText(c){if(!Array.isArray(c)||!c.length)return 'Нет данных';return c.map(function(x){return [x.type,x.height!=null?x.height+' ft':''].filter(Boolean).join(' ');}).join(', ');}
+  function render(report,icao,airportName){
+    const raw=report.rawText||report.raw_text||report.raw||report.metar||report.rawOb;
+    if(!raw)throw new Error('В ответе сервиса нет исходной строки METAR.');
+    const wind=report.wind;
+    const vis=report.visibility;
+    const temp=report.temperature;
+    const dew=temp&&typeof temp==='object'?temp.dewPoint:report.dewpoint;
+    const qnh=report.qnh!=null?report.qnh:(report.altimeter&&report.altimeter.value!=null?report.altimeter.value:report.altimeter);
+    const clouds=report.clouds;
+    const observed=report.timestamp||report.observedAt||report.observationTime||'';
+    result.innerHTML='<b style="color:#65d6a5">'+esc(icao)+' · METAR получен</b>'+(airportName?'<div style="margin-top:3px;color:#91a4bc">'+esc(airportName)+'</div>':'')+(observed?'<div style="margin-top:4px;color:#91a4bc;font-size:10px">Наблюдение: '+esc(observed)+'</div>':'')+
+      '<div class="weather-grid">'+cell('Ветер',windText(wind))+cell('Видимость',visibilityText(vis))+cell('Температура',temperatureText(temp))+cell('Точка росы',dew==null?'—':dew+' °C')+cell('QNH',qnh==null?'—':qnh+' hPa')+cell('Облачность',cloudsText(clouds))+'</div>'+
+      '<code class="raw">'+esc(raw)+'</code><div style="margin-top:8px;color:#91a4bc;font-size:10px">Источник: <a style="color:#57d8e8" href="https://metars.eu/learn/api" target="_blank" rel="noopener noreferrer">metars.eu</a>. Сводка может быть задержана или отсутствовать.</div>';
   }
-  async function loadMetar(code){
-    button.disabled=true;button.textContent='Загрузка…';result.textContent='Запрашиваем METAR для '+code+'…';
+  let requestId=0;
+  async function loadMetar(code,airportName){
+    const current=++requestId;
+    button.disabled=true;button.textContent='Загрузка…';input.value=code;
+    weatherTitle.textContent='METAR · '+code;
+    result.textContent='Запрашиваем актуальную сводку для '+code+'…';
     try{
       const response=await fetch('https://metars.eu/api/metars/'+encodeURIComponent(code)+'/decoded',{headers:{'Accept':'application/json'}});
-      if(!response.ok)throw new Error(response.status===404?'Для этого ICAO-кода нет доступного METAR.':'Сервис погоды ответил ошибкой HTTP '+response.status+'.');
+      if(!response.ok)throw new Error(response.status===404?'Для этого аэропорта сейчас нет доступного METAR.':'Сервис погоды ответил ошибкой HTTP '+response.status+'.');
       const data=await response.json();
-      const report=Array.isArray(data)?data[0]:data;
+      const report=Array.isArray(data)?data[0]:(data.reports&&Array.isArray(data.reports)?data.reports[0]:data);
       if(!report)throw new Error('Сервис не вернул сводку для этого аэропорта.');
-      const raw=pick(report,['rawText','raw_text','raw','metar','rawOb']);
-      if(!raw)throw new Error('В ответе сервиса нет исходной строки METAR. Попробуй позже.');
-      render(report,code);
+      if(current===requestId)render(report,code,airportName);
     }catch(error){
-      result.innerHTML='<b style="color:#f2bd67">METAR временно недоступен</b><br>'+esc(error.message||'Ошибка получения данных.')+'<br><a style="color:#57d8e8" href="https://metars.eu/'+encodeURIComponent(code)+'" target="_blank" rel="noopener noreferrer">Открыть metars.eu для '+esc(code)+'</a>';
-    }finally{button.disabled=false;button.textContent='Получить';}
+      if(current===requestId)result.innerHTML='<b style="color:#f2bd67">METAR временно недоступен</b><br>'+esc(error.message||'Ошибка получения данных.')+'<br><a style="color:#57d8e8" href="https://metars.eu/learn/api" target="_blank" rel="noopener noreferrer">Информация об API METAR</a>';
+    }finally{if(current===requestId){button.disabled=false;button.textContent='Получить';}}
   }
-  form.addEventListener('submit',function(event){event.preventDefault();const code=input.value.trim().toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code)){result.textContent='Введи корректный четырёхзначный ICAO-код.';return;}input.value=code;loadMetar(code);});
+  let selected=null;
+  const markerByIcao={};
+  function selectAirport(airport,zoom){
+    selected=airport;
+    document.querySelectorAll('.airport-row').forEach(function(el){el.classList.toggle('active',el.dataset.icao===airport.icao);});
+    Object.keys(markerByIcao).forEach(function(code){const el=markerByIcao[code].getElement();if(el)el.classList.toggle('selected',code===airport.icao);});
+    if(zoom)map.flyTo([airport.lat,airport.lon],5,{duration:.7});
+    markerByIcao[airport.icao].openPopup();
+    loadMetar(airport.icao,airport.name+' · '+airport.city);
+  }
+  airports.forEach(function(airport){
+    const icon=L.divIcon({className:'',html:'<div class="airport-marker" title="'+esc(airport.icao)+'"></div>',iconSize:[17,17],iconAnchor:[8,8]});
+    const marker=L.marker([airport.lat,airport.lon],{icon:icon,title:airport.icao+' — '+airport.name});
+    marker.bindPopup('<b>'+esc(airport.icao)+' · '+esc(airport.name)+'</b><br><span style="color:#91a4bc">'+esc(airport.city)+'</span><br><span style="color:#57d8e8">Нажми для загрузки METAR</span>');
+    marker.on('click',function(){selectAirport(airport,false);});
+    marker.addTo(map);markerByIcao[airport.icao]=marker;
+    const row=document.createElement('button');
+    row.type='button';row.className='airport-row';row.dataset.icao=airport.icao;
+    row.innerHTML='<span class="airport-dot"></span><span class="airport-label"><b>'+esc(airport.icao)+'</b><small>'+esc(airport.name)+' · '+esc(airport.city)+'</small></span><span class="airport-arrow">›</span>';
+    row.addEventListener('click',function(){selectAirport(airport,true);});
+    airportList.appendChild(row);
+  });
+  form.addEventListener('submit',function(event){
+    event.preventDefault();
+    const code=input.value.trim().toUpperCase();
+    if(!/^[A-Z0-9]{4}$/.test(code)){result.textContent='Введи корректный четырёхзначный ICAO-код.';return;}
+    const airport=airports.find(function(item){return item.icao===code;});
+    if(airport){selectAirport(airport,true);return;}
+    document.querySelectorAll('.airport-row').forEach(function(el){el.classList.remove('active');});
+    selected=null;weatherTitle.textContent='METAR · '+code;loadMetar(code,'');
+  });
 })();
 </script>
 </body>

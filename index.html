@@ -98,7 +98,7 @@ async function fetchMetar(icao,container){
    const body=await response.text();
    let data=body;try{data=JSON.parse(body);}catch(ignore){}
    const raw=extractRaw(data);
-   if(!raw||!/\\b[A-Z]{4}\\s+\\d{6}Z\\b/.test(raw))throw new Error('No valid raw METAR in response');
+   if(!raw||!/\b[A-Z]{4}\s+\d{6}Z\b/.test(raw))throw new Error('No valid raw METAR in response');
    container.innerHTML=metarMarkup(raw);return;
   }catch(error){lastError=error;}
  }

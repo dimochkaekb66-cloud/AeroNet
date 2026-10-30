@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -29,7 +29,7 @@
 </section>
 <div class="empty" id="data-note">Трафик самолётов и активные диспетчеры появятся только после подключения реальных источников AeroNet / JoinFS. Сейчас отображаются аэропорты, а не самолёты.</div>
 <div class="legend"><span class="legend-mark"></span> Аэропорт · кластеры объединяют близкие точки</div>
-<footer class="foot">Аэропорты: OurAirports, открытые данные общественного достояния; вертолётные площадки и водные аэродромы исключены. Подложка: © OpenStreetMap contributors. METAR: metars.eu / NOAA Aviation Weather Center. Не использовать для реальных полётов.</footer>
+<footer class="foot">Аэропорты: OurAirports, открытые данные общественного достояния; вертолётные площадки и водные аэродромы исключены. Map tiles: CARTO Positron / OpenStreetMap contributors. METAR: metars.eu / NOAA Aviation Weather Center. Не использовать для реальных полётов.</footer>
 </aside>
 <main class="mapwrap"><div id="map" role="application" aria-label="Интерактивная карта всех аэропортов мира"></div><div class="maptag"><b>АЭРОПОРТЫ МИРА</b><span id="map-status">Подключаем карту…</span></div></main>
 </div>
@@ -51,10 +51,10 @@
   const mapStatus=document.getElementById('map-status');
   if(!window.L){mapNode.innerHTML='<div style="padding:24px;color:#17283e">Не удалось загрузить библиотеку карты. Проверь интернет и обнови страницу.</div>';topStatus.textContent='КАРТА НЕДОСТУПНА';return;}
   const map=L.map('map',{zoomControl:true,worldCopyJump:true,minZoom:2}).setView([22,5],2);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
-  }).addTo(map).on('tileerror',function(){mapStatus.textContent='Подложка временно недоступна';});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    subdomains:'abcd',maxZoom:20,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>'
+  }).addTo(map).on('tileerror',function(){mapStatus.textContent='Map tiles temporarily unavailable';});
   setTimeout(function(){map.invalidateSize();},200);
   window.addEventListener('resize',function(){map.invalidateSize();});
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -201,6 +201,33 @@
       marker.on('click',markerClick);
       markers.push(marker);
     }
+    // Keep a small set of major airports visible even if the external CSV is temporarily unavailable or incomplete.
+    const featuredAirports=[
+      ['ZBAD','Beijing Daxing International Airport','Beijing','China',39.5098,116.4105],
+      ['ZBAA','Beijing Capital International Airport','Beijing','China',40.0799,116.6031],
+      ['ZSPD','Shanghai Pudong International Airport','Shanghai','China',31.1434,121.8052],
+      ['USSS','Koltsovo International Airport','Yekaterinburg','Russia',56.7431,60.8027],
+      ['EGLL','London Heathrow Airport','London','United Kingdom',51.4700,-0.4543],
+      ['LFPG','Paris Charles de Gaulle Airport','Paris','France',49.0097,2.5479],
+      ['EDDF','Frankfurt Airport','Frankfurt','Germany',50.0379,8.5622],
+      ['ESSA','Stockholm Arlanda Airport','Stockholm','Sweden',59.6519,17.9186],
+      ['KJFK','John F. Kennedy International Airport','New York','United States',40.6413,-73.7781],
+      ['KLAX','Los Angeles International Airport','Los Angeles','United States',33.9416,-118.4085],
+      ['OMDB','Dubai International Airport','Dubai','United Arab Emirates',25.2532,55.3657],
+      ['WSSS','Singapore Changi Airport','Singapore','Singapore',1.3644,103.9915],
+      ['RJTT','Tokyo Haneda Airport','Tokyo','Japan',35.5494,139.7798],
+      ['YSSY','Sydney Kingsford Smith Airport','Sydney','Australia',-33.9399,151.1753]
+    ];
+    const knownCodes=new Set(airports.map(function(a){return a.icao;}).filter(Boolean));
+    featuredAirports.forEach(function(p){
+      if(knownCodes.has(p[0]))return;
+      const airport={id:p[0],ident:p[0],icao:p[0],iata:'',type:'large_airport',name:p[1],city:p[2],country:p[3],lat:p[4],lon:p[5],scheduled:true};
+      airports.push(airport);
+      const marker=L.marker([airport.lat,airport.lon],{icon:icons.large_airport,title:airport.icao+' — '+airport.name,airport:airport,keyboard:false});
+      marker.on('click',markerClick);
+      markers.push(marker);
+      knownCodes.add(p[0]);
+    });
     allAirports=airports;
     airportCount.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов';
     mapStatus.textContent=airports.length.toLocaleString('ru-RU')+' аэропортов';
